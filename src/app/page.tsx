@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, RefObject } from "react"
 import Layout from "@/components/Layout"
 import SearchBar from "@/components/SearchBar"
 import { useRouter } from "next/navigation"
@@ -17,8 +17,10 @@ import {
 } from "react-icons/fa"
 
 // Custom hook for intersection observer
-function useIntersectionObserver(options = {}) {
-  const ref = useRef(null)
+export function useIntersectionObserver<T extends HTMLElement = HTMLDivElement>(
+  options: IntersectionObserverInit = {}
+): [RefObject<T>, boolean] {
+  const ref = useRef<T>(null)
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -26,19 +28,15 @@ function useIntersectionObserver(options = {}) {
       setIsVisible(entry.isIntersecting)
     }, options)
 
-    const currentRef = ref.current
-    if (currentRef) {
-      observer.observe(currentRef)
-    }
+    const current = ref.current
+    if (current) observer.observe(current)
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef)
-      }
+      if (current) observer.unobserve(current)
     }
-  }, [ref, options])
+  }, [options])
 
-  return [ref, isVisible]
+  return [ref as RefObject<T>, isVisible]
 }
 
 export default function Home() {
@@ -51,14 +49,14 @@ export default function Home() {
 
   // Track mouse position for custom cursor and hover effects
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       setCursorPosition({ x: e.clientX, y: e.clientY })
     }
     window.addEventListener("mousemove", handleMouseMove)
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, [])
 
-  const handleSearch = (companyName) => {
+  const handleSearch = (companyName: string) => {
     setIsLoading(true)
     router.push(`/research?company=${encodeURIComponent(companyName)}`)
   }
