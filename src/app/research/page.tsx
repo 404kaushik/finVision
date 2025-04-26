@@ -17,8 +17,9 @@ import {
   FaLightbulb,
   FaExclamationTriangle,
   FaChartLine,
+  FaGlobe
 } from "react-icons/fa"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/utils/supabase/client"
 import CompanyChart from "@/components/CompanyChart"
 import { FaExternalLinkAlt } from "react-icons/fa"
 
@@ -62,6 +63,85 @@ export default function ResearchPage() {
   const [loadingStage, setLoadingStage] = useState("Gathering data")
   const [companyNews, setCompanyNews] = useState<any[]>([])
   const [newsLoading, setNewsLoading] = useState(false)
+  const [financialData, setFinancialData] = useState<any>(null)
+  const [financialLoading, setFinancialLoading] = useState(false)
+  const [financialError, setFinancialError] = useState<string | null>(null)
+
+  // Add this function to fetch financial data
+  const fetchFinancialData = async (company: string) => {
+    if (!company) return
+    
+    setFinancialLoading(true)
+    setNewsLoading(true)
+    setFinancialError(null)
+    
+    try {
+      // Fetch financial data from Finnhub API
+      const response = await fetch(`/api/financials?company=${encodeURIComponent(company)}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch financial data')
+      }
+      
+      const data = await response.json()
+      setFinancialData(data)
+      
+      // Also update chart data with real stock price data if available
+      if (data.stockPrices && data.stockPrices.length > 0) {
+        const chartLabels = data.stockPrices.map((item: any) => new Date(item.date).toLocaleDateString())
+        const chartData = {
+          labels: chartLabels,
+          datasets: [
+            {
+              label: "Stock Price",
+              data: data.stockPrices.map((item: any) => item.close),
+              borderColor: "rgba(59, 130, 246, 1)",
+              borderWidth: 2,
+            }
+          ]
+        }
+        
+        // Add industry average if available
+        if (data.industryAverage && data.industryAverage.length > 0) {
+          chartData.datasets.push({
+            label: "Industry Average",
+            data: data.industryAverage.map((item: any) => item.value),
+            borderColor: "rgba(139, 92, 246, 1)",
+            borderWidth: 2,
+          })
+        }
+        
+        setChartData(chartData)
+      }
+    } catch (error) {
+      console.error('Error fetching financial data:', error)
+      setFinancialError('Failed to load financial data. Please try again.')
+    } finally {
+      setFinancialLoading(false)
+      setNewsLoading(false)
+    }
+  }
+
+  // Update useEffect to call this when the tab changes
+  useEffect(() => {
+    if (activeTab === 'news' && companyName) {
+      fetchCompanyNews(companyName)
+    } else if (activeTab === 'financials' && companyName) {
+      fetchFinancialData(companyName)
+    }
+  }, [activeTab, companyName])
+
+  useEffect(() => {
+    if (companyName) {
+      fetchResearch()
+      // Only generate mock data if we don't have real data yet
+      if (!chartData) {
+        generateMockChartData()
+      }
+    }
+  }, [companyName])
+
+
 
   // Add this function to fetch news
   const fetchCompanyNews = async (company: string) => {
@@ -330,11 +410,11 @@ export default function ResearchPage() {
               disabled={saving || saved || loading}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors hover-lift ${
                 saved
-                  ? "bg-success text-white"
+                  ? "border-2 from-primary to-secondary text-black"
                   : "bg-gradient-to-r from-primary to-secondary hover:from-primary-hover hover:to-secondary text-white"
               }`}
             >
-              {saving ? <FaSpinner className="animate-spin" /> : <FaStar className={saved ? "pulse" : ""} />}
+              {saving ? <FaSpinner className="animate-spin " /> : <FaStar className={saved ? "pulse" : ""} />}
               <span>{saved ? "Saved ✓" : "Save Research"}</span>
             </button>
           </div>
@@ -563,116 +643,148 @@ export default function ResearchPage() {
             )}
 
             {activeTab === "financials" && (
-              <div className="space-y-8 fade-in">
-                {chartData && (
-                  <section className="bg-card-bg p-6 rounded-lg shadow-lg border border-border hover-lift">
+              <>
+                {financialLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <FaSpinner className="animate-spin text-4xl mb-4" />
+                    <p className="text-muted-foreground">Loading financial data...</p>
+                  </div>
+                ) : financialError ? (
+                  <div className="bg-error/10 border border-error p-6 rounded-lg slide-up">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                        <FaChartLine />
+                      <div className="w-10 h-10 rounded-full bg-error/20 flex items-center justify-center text-error">
+                        <FaExclamationTriangle />
                       </div>
-                      <h2 className="text-2xl font-semibold">Stock Performance</h2>
+                      <h3 className="text-xl font-semibold text-error">Error</h3>
                     </div>
-                    <CompanyChart title={`${companyName} Stock Price (Last 12 Months)`} data={chartData} />
-                  </section>
-                )}
-
-                <section className="bg-card-bg p-6 rounded-lg shadow-lg border border-border hover-lift">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary">
-                      <FaChartBar />
-                    </div>
-                    <h2 className="text-2xl font-semibold">Financial Highlights</h2>
+                    <p>{financialError}</p>
+                    <button
+                      onClick={() => fetchFinancialData(companyName || '')}
+                      className="mt-4 px-4 py-2 bg-error hover:bg-error/80 text-white rounded-lg transition-colors"
+                    >
+                      Try Again
+                    </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-4 bg-card-hover rounded-lg hover-lift">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium">Revenue</h3>
-                        <span className="text-2xl">💰</span>
+                ) : (
+                  <>
+                    {/* Stock Price Chart */}
+                    <section className="bg-card-bg p-6 rounded-lg shadow-lg border border-border transition-all duration-300 fade-in hover-lift">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                          <FaChartLine />
+                        </div>
+                        <h2 className="text-2xl font-semibold">Stock Performance</h2>
                       </div>
-                      <p className="text-2xl font-bold">$12.4B</p>
-                      <p className="text-success flex items-center">
-                        +14.2% YoY
-                        <span className="ml-2">{getPerformanceEmoji(14.2)}</span>
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-card-hover rounded-lg hover-lift">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium">Net Income</h3>
-                        <span className="text-2xl">💵</span>
+                      <div className="h-80 w-full">
+                        {chartData ? (
+                          <CompanyChart data={chartData} title={`${companyName} Stock Price`} />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <p className="text-muted-foreground">No chart data available</p>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-2xl font-bold">$3.2B</p>
-                      <p className="text-success flex items-center">
-                        +8.7% YoY
-                        <span className="ml-2">{getPerformanceEmoji(8.7)}</span>
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-card-hover rounded-lg hover-lift">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium">EPS</h3>
-                        <span className="text-2xl">📈</span>
-                      </div>
-                      <p className="text-2xl font-bold">$2.45</p>
-                      <p className="text-success flex items-center">
-                        +10.3% YoY
-                        <span className="ml-2">{getPerformanceEmoji(10.3)}</span>
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-card-hover rounded-lg hover-lift">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium">P/E Ratio</h3>
-                        <span className="text-2xl">⚖️</span>
-                      </div>
-                      <p className="text-2xl font-bold">24.3</p>
-                      <p className="text-muted-foreground">Industry Avg: 22.1</p>
-                    </div>
-
-                    <div className="p-4 bg-card-hover rounded-lg hover-lift">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium">Market Cap</h3>
-                        <span className="text-2xl">🏢</span>
-                      </div>
-                      <p className="text-2xl font-bold">$845B</p>
-                      <p className="text-muted-foreground">Rank: #5</p>
-                    </div>
-
-                    <div className="p-4 bg-card-hover rounded-lg hover-lift">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium">Dividend Yield</h3>
-                        <span className="text-2xl">💸</span>
-                      </div>
-                      <p className="text-2xl font-bold">1.8%</p>
-                      <p className="text-muted-foreground">Industry Avg: 2.1%</p>
-                    </div>
-                  </div>
-                </section>
-
-                {/* Competitors Section */}
-                {research.competitors && research.competitors.length > 0 && (
-                  <section className="bg-card-bg p-6 rounded-lg shadow-lg border border-border hover-lift">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center text-blue-400">
-                        <span className="text-xl">🏆</span>
-                      </div>
-                      <h2 className="text-2xl font-semibold">Competitors</h2>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {research.competitors.map((competitor: string, index: number) => (
-                        <Link
-                          key={index}
-                          href={`/research?company=${encodeURIComponent(competitor)}`}
-                          className="p-4 bg-card-hover rounded-lg hover-lift flex items-center justify-between"
-                        >
-                          <span>{competitor}</span>
-                          <FaExternalLinkAlt className="text-sm text-muted-foreground" />
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
+                    </section>
+                    
+                    {/* Financial Metrics */}
+                    {financialData && (
+                      <section className="bg-card-bg p-6 rounded-lg shadow-lg border border-border transition-all duration-300 slide-up hover-lift">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary">
+                            <FaChartBar />
+                          </div>
+                          <h2 className="text-2xl font-semibold">Financial Metrics</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Key Ratios */}
+                          <div className="space-y-4">
+                            <h3 className="text-xl font-medium mb-4">Key Ratios</h3>
+                            {financialData.ratios ? (
+                              Object.entries(financialData.ratios).map(([key, value]: [string, any], index: number) => (
+                                <div key={index} className="flex justify-between items-center p-3 bg-card-hover/50 rounded-lg">
+                                  <span className="font-medium">{key}</span>
+                                  <span className="font-semibold">{value}</span>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-muted-foreground">No ratio data available</p>
+                            )}
+                          </div>
+                          
+                          {/* Latest Financials */}
+                          <div className="space-y-4">
+                            <h3 className="text-xl font-medium mb-4">Latest Financials</h3>
+                            {financialData.financials ? (
+                              Object.entries(financialData.financials).map(([key, value]: [string, any], index: number) => {
+                                // Determine if the value is positive or negative for styling
+                                const isPositive = typeof value === 'number' && value > 0
+                                const isNegative = typeof value === 'number' && value < 0
+                                
+                                return (
+                                  <div key={index} className="flex justify-between items-center p-3 bg-card-hover/50 rounded-lg">
+                                    <span className="font-medium">{key}</span>
+                                    <span className={`font-semibold ${isPositive ? 'text-green-500' : ''} ${isNegative ? 'text-red-500' : ''}`}>
+                                      {typeof value === 'number' ? 
+                                        new Intl.NumberFormat('en-US', { 
+                                          style: 'currency', 
+                                          currency: 'USD',
+                                          notation: 'compact',
+                                          maximumFractionDigits: 2
+                                        }).format(value) : value}
+                                    </span>
+                                  </div>
+                                )
+                              })
+                            ) : (
+                              <p className="text-muted-foreground">No financial data available</p>
+                            )}
+                          </div>
+                        </div>
+                      </section>
+                    )}
+                    
+                    {/* Market Data */}
+                    {financialData && financialData.marketData && (
+                      <section className="bg-card-bg p-6 rounded-lg shadow-lg border border-border transition-all duration-300 slide-up hover-lift">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center text-blue-400">
+                            <FaGlobe />
+                          </div>
+                          <h2 className="text-2xl font-semibold">Market Data</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {Object.entries(financialData.marketData).map(([key, value]: [string, any], index: number) => {
+                            // Format the display based on the type of data
+                            let displayValue = value
+                            let icon = null
+                            
+                            if (key.toLowerCase().includes('change') || key.toLowerCase().includes('percent')) {
+                              const numValue = parseFloat(value)
+                              const isPositive = numValue > 0
+                              displayValue = `${isPositive ? '+' : ''}${numValue.toFixed(2)}%`
+                              icon = isPositive ? 
+                                <span className="text-green-500">↑</span> : 
+                                <span className="text-red-500">↓</span>
+                            }
+                            
+                            return (
+                              <div key={index} className="p-4 bg-card-hover/30 rounded-lg">
+                                <p className="text-sm text-muted-foreground mb-1">{key}</p>
+                                <p className="text-xl font-semibold flex items-center gap-1">
+                                  {icon}
+                                  {displayValue}
+                                </p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </section>
+                    )}
+                  </>
                 )}
-              </div>
+              </>
             )}
 
             {activeTab === "news" && (
@@ -684,7 +796,7 @@ export default function ResearchPage() {
                   <h2 className="text-2xl font-semibold">Latest News</h2>
                 </div>
                 
-                {loading ? (
+                {newsLoading ? (
                   <div className="flex flex-col items-center py-10">
                     <FaSpinner className="animate-spin text-2xl mb-4" />
                     <p>Loading latest news...</p>

@@ -2,17 +2,29 @@
 
 import { useEffect, useState } from "react"
 import Layout from "@/components/Layout"
+import { StockCarousel } from "@/components/StockCarousel"
 import CompanyChart from "@/components/CompanyChart"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { FaInfoCircle, FaExchangeAlt, FaSyncAlt } from "react-icons/fa"
+
+type MarketIndex = {
+  symbol: string
+  name: string
+  price: number
+  change: number
+  changePercent: number
+}
 
 type MarketData = {
   symbol: string
+  companyName: string
   price: number
   change: number
   changePercent: number
   volume: string
   marketCap: string
+  logo?: string
+  industry?: string
   emoji: string
 }
 
@@ -30,10 +42,13 @@ const getPerformanceEmoji = (changePercent: number): string => {
 
 export default function MarketPage() {
   const [marketData, setMarketData] = useState<MarketData[]>([])
+  const [indices, setIndices] = useState<MarketIndex[]>([])
   const [loading, setLoading] = useState(true)
   const [chartData, setChartData] = useState<any>(null)
   const [showHelp, setShowHelp] = useState(false)
   const [refreshAnimation, setRefreshAnimation] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchMarketData()
@@ -44,87 +59,28 @@ export default function MarketPage() {
   const fetchMarketData = async () => {
     setLoading(true)
     try {
-      // This would normally fetch from a real API
-      // Simulating market data for demonstration
-      const mockData = [
-        {
-          symbol: "AAPL",
-          price: 175.34 + Math.random() * 5,
-          change: 2.45,
-          changePercent: 1.42,
-          volume: "62.3M",
-          marketCap: "2.8T",
-        },
-        {
-          symbol: "MSFT",
-          price: 340.67 + Math.random() * 5,
-          change: -1.23,
-          changePercent: -0.36,
-          volume: "28.1M",
-          marketCap: "2.5T",
-        },
-        {
-          symbol: "GOOGL",
-          price: 131.86 + Math.random() * 5,
-          change: 0.56,
-          changePercent: 0.43,
-          volume: "15.7M",
-          marketCap: "1.7T",
-        },
-        {
-          symbol: "AMZN",
-          price: 127.74 + Math.random() * 5,
-          change: -0.89,
-          changePercent: -0.69,
-          volume: "32.4M",
-          marketCap: "1.3T",
-        },
-        {
-          symbol: "META",
-          price: 301.41 + Math.random() * 5,
-          change: 4.12,
-          changePercent: 1.38,
-          volume: "18.9M",
-          marketCap: "780B",
-        },
-        {
-          symbol: "TSLA",
-          price: 248.48 + Math.random() * 5,
-          change: -3.56,
-          changePercent: -1.41,
-          volume: "45.2M",
-          marketCap: "790B",
-        },
-        {
-          symbol: "NVDA",
-          price: 437.53 + Math.random() * 5,
-          change: 7.89,
-          changePercent: 1.83,
-          volume: "38.6M",
-          marketCap: "1.1T",
-        },
-        {
-          symbol: "JPM",
-          price: 146.77 + Math.random() * 5,
-          change: 0.34,
-          changePercent: 0.23,
-          volume: "9.8M",
-          marketCap: "430B",
-        },
-      ]
-
-      // Add emojis based on performance
-      const dataWithEmojis = mockData.map((stock) => ({
+      const response = await fetch('/api/market-data')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch market data')
+      }
+      
+      const data = await response.json()
+      
+      // Process stocks data
+      const stocksWithEmojis = data.stocks.map((stock: any) => ({
         ...stock,
-        emoji: getPerformanceEmoji(stock.changePercent),
+        emoji: getPerformanceEmoji(stock.changePercent)
       }))
-
-      setMarketData(dataWithEmojis)
-
+      
+      setMarketData(stocksWithEmojis)
+      setIndices(data.indices)
+      setLastUpdated(new Date())
+      
       // Create chart data
-      const labels = dataWithEmojis.map((item) => item.symbol)
-      const prices = dataWithEmojis.map((item) => item.price)
-      const changes = dataWithEmojis.map((item) => item.changePercent)
+      const labels = stocksWithEmojis.map((item: MarketData) => item.symbol)
+      const prices = stocksWithEmojis.map((item: MarketData) => item.price)
+      const changes = stocksWithEmojis.map((item: MarketData) => item.changePercent)
 
       setChartData({
         labels,
@@ -143,12 +99,120 @@ export default function MarketPage() {
           },
         ],
       })
-
+      
+      setError(null)
+      
       // Animate refresh button
       setRefreshAnimation(true)
       setTimeout(() => setRefreshAnimation(false), 1000)
     } catch (error) {
       console.error("Error fetching market data:", error)
+      setError("Failed to fetch market data. Using sample data instead.")
+      
+      // Use sample data as fallback
+      if (marketData.length === 0) {
+        const mockData = [
+          {
+            symbol: "AAPL",
+            companyName: "Apple Inc.",
+            price: 175.34 + Math.random() * 5,
+            change: 2.45,
+            changePercent: 1.42,
+            volume: "62.3M",
+            marketCap: "2.8T",
+          },
+          {
+            symbol: "MSFT",
+            price: 340.67 + Math.random() * 5,
+            change: -1.23,
+            changePercent: -0.36,
+            volume: "28.1M",
+            marketCap: "2.5T",
+          },
+          {
+            symbol: "GOOGL",
+            price: 131.86 + Math.random() * 5,
+            change: 0.56,
+            changePercent: 0.43,
+            volume: "15.7M",
+            marketCap: "1.7T",
+          },
+          {
+            symbol: "AMZN",
+            price: 127.74 + Math.random() * 5,
+            change: -0.89,
+            changePercent: -0.69,
+            volume: "32.4M",
+            marketCap: "1.3T",
+          },
+          {
+            symbol: "META",
+            price: 301.41 + Math.random() * 5,
+            change: 4.12,
+            changePercent: 1.38,
+            volume: "18.9M",
+            marketCap: "780B",
+          },
+          {
+            symbol: "TSLA",
+            price: 248.48 + Math.random() * 5,
+            change: -3.56,
+            changePercent: -1.41,
+            volume: "45.2M",
+            marketCap: "790B",
+          },
+          {
+            symbol: "NVDA",
+            price: 437.53 + Math.random() * 5,
+            change: 7.89,
+            changePercent: 1.83,
+            volume: "38.6M",
+            marketCap: "1.1T",
+          },
+          {
+            symbol: "JPM",
+            price: 146.77 + Math.random() * 5,
+            change: 0.34,
+            changePercent: 0.23,
+            volume: "9.8M",
+            marketCap: "430B",
+          },
+        ]
+
+        // Add emojis based on performance
+        const dataWithEmojis = mockData.map((stock) => ({
+          ...stock,
+          emoji: getPerformanceEmoji(stock.changePercent),
+        }))
+
+        setMarketData(dataWithEmojis.map(stock => ({
+          ...stock,
+          companyName: stock.companyName || stock.symbol // Provide fallback for missing companyName
+        })))
+        
+        // Create chart data from sample data
+        const labels = dataWithEmojis.map((item) => item.symbol)
+        const prices = dataWithEmojis.map((item) => item.price)
+        const changes = dataWithEmojis.map((item) => item.changePercent)
+
+        setChartData({
+          labels,
+          datasets: [
+            {
+              label: "Price",
+              data: prices,
+              borderColor: "rgba(59, 130, 246, 1)",
+              backgroundColor: "rgba(59, 130, 246, 0.5)",
+            },
+            {
+              label: "Change %",
+              data: changes,
+              borderColor: "rgba(139, 92, 246, 1)",
+              backgroundColor: "rgba(139, 92, 246, 0.5)",
+            },
+          ],
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -191,14 +255,32 @@ export default function MarketPage() {
               <FaInfoCircle />
             </button>
           </div>
-          <button
-            onClick={fetchMarketData}
-            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors hover-lift"
-          >
-            <FaSyncAlt className={refreshAnimation ? "rotate" : ""} />
-            <span>{loading ? "Refreshing..." : "Refresh"}</span>
-          </button>
+          <div className="flex items-center gap-4">
+            {lastUpdated && (
+              <span className="text-sm text-muted-foreground">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+            <button
+              onClick={fetchMarketData}
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors hover-lift"
+              disabled={loading}
+            >
+              <FaSyncAlt className={refreshAnimation ? "rotate" : ""} />
+              <span>{loading ? "Refreshing..." : "Refresh"}</span>
+            </button>
+          </div>
         </motion.div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500"
+          >
+            {error}
+          </motion.div>
+        )}
 
         {showHelp && (
           <motion.div
@@ -247,50 +329,35 @@ export default function MarketPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
             >
-              <div className="bg-card-bg p-4 rounded-lg border border-border hover-lift">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">S&P 500</h3>
-                  <span className="text-success">🚀</span>
-                </div>
-                <p className="text-2xl font-bold mt-2">4,783.45</p>
-                <p className="text-success flex items-center">
-                  +0.38% <span className="ml-1">📈</span>
-                </p>
-              </div>
-
-              <div className="bg-card-bg p-4 rounded-lg border border-border hover-lift">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Nasdaq</h3>
-                  <span className="text-success">🔥</span>
-                </div>
-                <p className="text-2xl font-bold mt-2">16,742.39</p>
-                <p className="text-success flex items-center">
-                  +0.54% <span className="ml-1">📈</span>
-                </p>
-              </div>
-
-              <div className="bg-card-bg p-4 rounded-lg border border-border hover-lift">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Dow Jones</h3>
-                  <span className="text-error">⚠️</span>
-                </div>
-                <p className="text-2xl font-bold mt-2">38,503.69</p>
-                <p className="text-error flex items-center">
-                  -0.11% <span className="ml-1">📉</span>
-                </p>
-              </div>
-
-              <div className="bg-card-bg p-4 rounded-lg border border-border hover-lift">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Russell 2000</h3>
-                  <span className="text-success">✅</span>
-                </div>
-                <p className="text-2xl font-bold mt-2">2,009.69</p>
-                <p className="text-success flex items-center">
-                  +0.23% <span className="ml-1">📈</span>
-                </p>
-              </div>
+              {indices.map((index) => (
+                <motion.div 
+                  key={index.symbol}
+                  className="bg-card-bg p-4 rounded-lg border border-border hover-lift"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">{index.name}</h3>
+                    <span className="text-success">{getPerformanceEmoji(index.changePercent)}</span>
+                  </div>
+                  <p className="text-2xl font-bold mt-2">{index.price.toLocaleString()}</p>
+                  <p className={`flex items-center ${index.changePercent >= 0 ? 'text-success' : 'text-error'}`}>
+                    {index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}% 
+                    <span className="ml-1">{index.changePercent >= 0 ? '📈' : '📉'}</span>
+                  </p>
+                </motion.div>
+              ))}
             </motion.div>
+
+            {/* Stock Carousel - Positioned at the top */}
+            <div className="mb-8 mt-4">
+              <StockCarousel
+                title="Top Performing Stocks"
+                description="Stocks with the highest positive change today"
+                filter={(stock) => (stock.changePercent || 0) > 0}
+                // Remove refreshInterval prop since it's not defined in StockCarouselProps
+              />
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -300,15 +367,19 @@ export default function MarketPage() {
             >
               <div className="p-4 border-b border-border flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Top Tech Stocks</h2>
-                <div className="text-sm text-muted-foreground">Last updated: {new Date().toLocaleTimeString()}</div>
+                <div className="text-sm text-muted-foreground">
+                  {lastUpdated ? `Last updated: ${lastUpdated.toLocaleTimeString()}` : 'Updating...'}
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <motion.table variants={container} initial="hidden" animate="show" className="w-full">
                   <thead className="bg-card-hover">
                     <tr>
                       <th className="p-3 text-left">Symbol</th>
-                      <th className="p-3 text-left">Price</th>
+                      <th className="p-3 text-left">Price (USD$)</th>
                       <th className="p-3 text-left">Change</th>
+                      <th className="p-3 text-left">Volume</th>
+                      <th className="p-3 text-left">Market Cap</th>
                       <th className="p-3 text-left">Status</th>
                     </tr>
                   </thead>
@@ -330,6 +401,8 @@ export default function MarketPage() {
                           </span>
                           <span className="ml-2 text-lg">{stock.emoji}</span>
                         </td>
+                        <td className="p-3">{stock.volume}</td>
+                        <td className="p-3">{stock.marketCap}</td>
                         <td className="p-3">
                           <div
                             className={`px-2 py-1 rounded-full text-xs inline-flex items-center ${

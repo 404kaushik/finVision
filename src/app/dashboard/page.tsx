@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Layout from "@/components/Layout"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/utils/supabase/client"
 import Link from "next/link"
 import {
   FaHistory,
@@ -19,14 +19,28 @@ import {
   FaRocket,
   FaChartBar,
   FaUser,
+  FaSyncAlt,
 } from "react-icons/fa"
 import CompanyChart from "@/components/CompanyChart"
 import Confetti from "react-confetti"
+import { StockCarousel } from "@/components/StockCarousel"
 
 interface Achievement {
   searches: boolean;
   saved: boolean;
   streak: boolean;
+}
+
+// Helper function to get emoji based on performance
+const getPerformanceEmoji = (changePercent: number): string => {
+  if (changePercent >= 5) return "🚀" // Rocket for big gains
+  if (changePercent >= 2) return "🔥" // Fire for strong gains
+  if (changePercent >= 0.5) return "📈" // Chart up for moderate gains
+  if (changePercent > 0) return "✅" // Check for small gains
+  if (changePercent > -0.5) return "⚠️" // Warning for small losses
+  if (changePercent > -2) return "📉" // Chart down for moderate losses
+  if (changePercent > -5) return "❄️" // Cold for strong losses
+  return "💥" // Explosion for big losses
 }
 
 export default function Dashboard() {
@@ -37,6 +51,9 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<any>(null)
   const [activityData, setActivityData] = useState<any[]>([])
   const [showConfetti, setShowConfetti] = useState(false)
+  const [marketData, setMarketData] = useState<any[]>([])
+  const [refreshAnimation, setRefreshAnimation] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   
   const [achievements, setAchievements] = useState<Achievement>({
     searches: false, 
@@ -45,9 +62,12 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    generateMockChartData()
-    generateMockActivityData()
+    fetchMarketData()
     fetchUserData()
+    
+    // Set up auto-refresh every 60 seconds
+    const interval = setInterval(fetchMarketData, 60000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -65,31 +85,158 @@ export default function Dashboard() {
     }
   }, [searches, savedCompanies, achievements])
 
-  const generateMockChartData = () => {
-    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    const data = {
+  const fetchMarketData = async () => {
+    try {
+      const API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY
+      
+      if (!API_KEY) {
+        console.error("Finnhub API key is not defined")
+        generateFallbackData()
+        return
+      }
+      
+      // Popular market indices and stocks to track
+      const symbols = ["SPY", "QQQ", "DIA", "AAPL", "MSFT", "GOOGL", "AMZN"]
+      
+      const stockPromises = symbols.map(async (symbol) => {
+        const quoteUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`
+        const profileUrl = `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`
+        
+        try {
+          const [quoteRes, profileRes] = await Promise.all([
+            fetch(quoteUrl),
+            fetch(profileUrl)
+          ])
+          
+          if (!quoteRes.ok || !profileRes.ok) {
+            throw new Error(`Failed to fetch data for ${symbol}`)
+          }
+          
+          const quoteData = await quoteRes.json()
+          const profileData = await profileRes.json()
+          
+          return {
+            symbol: symbol,
+            name: profileData.name || symbol,
+            price: quoteData.c || 0, // Current price
+            change: quoteData.d || 0, // Change
+            changePercent: quoteData.dp || 0, // Change percent
+            emoji: getPerformanceEmoji(quoteData.dp || 0)
+          }
+        } catch (error) {
+          console.error(`Error fetching data for ${symbol}:`, error)
+          return null
+        }
+      })
+      
+      const results = await Promise.allSettled(stockPromises)
+      
+      // Filter successful results
+      const fetchedStocks = results
+        .filter((result): result is PromiseFulfilledResult<any> => 
+          result.status === 'fulfilled' && result.value !== null)
+        .map(result => result.value)
+      
+      if (fetchedStocks.length > 0) {
+        setMarketData(fetchedStocks)
+        
+        // Create chart data from fetched stocks
+        const labels = fetchedStocks.map(stock => stock.symbol)
+        const changes = fetchedStocks.map(stock => stock.changePercent)
+        
+        setChartData({
+          labels,
+          datasets: [
+            {
+              label: "Daily Change %",
+              data: changes,
+              borderColor: "rgba(59, 130, 246, 1)",
+              backgroundColor: "rgba(59, 130, 246, 0.5)",
+            },
+          ],
+        })
+        
+        // Generate activity data based on real market movements
+        const newActivityData = fetchedStocks
+          .filter(stock => Math.abs(stock.changePercent) > 1) // Only include stocks with significant movement
+          .map(stock => {
+            const isPositive = stock.changePercent > 0
+            return {
+              type: isPositive ? "gain" : "loss",
+              company: stock.name,
+              time: "today",
+              emoji: stock.emoji,
+              change: stock.changePercent.toFixed(2) + "%"
+            }
+          })
+          .slice(0, 5) // Limit to 5 items
+        
+        if (newActivityData.length > 0) {
+          setActivityData(newActivityData)
+        }
+        
+        setLastUpdated(new Date())
+      } else {
+        generateFallbackData()
+      }
+      
+      // Animate refresh button
+      setRefreshAnimation(true)
+      setTimeout(() => setRefreshAnimation(false), 1000)
+      
+    } catch (error) {
+      console.error("Error fetching market data:", error)
+      generateFallbackData()
+    }
+  }
+  
+  const generateFallbackData = () => {
+    // Fallback data if API fails
+    const fallbackMarketData = [
+      { symbol: "SPY", name: "S&P 500 ETF", price: 478.34, change: 1.82, changePercent: 0.38, emoji: "📈" },
+      { symbol: "QQQ", name: "Nasdaq ETF", price: 430.67, change: 2.33, changePercent: 0.54, emoji: "🔥" },
+      { symbol: "DIA", name: "Dow Jones ETF", price: 385.03, change: -0.42, changePercent: -0.11, emoji: "📉" },
+      { symbol: "AAPL", name: "Apple Inc.", price: 175.34, change: 2.45, changePercent: 1.42, emoji: "📈" },
+      { symbol: "MSFT", name: "Microsoft Corp.", price: 340.67, change: -1.23, changePercent: -0.36, emoji: "⚠️" },
+      { symbol: "GOOGL", name: "Alphabet Inc.", price: 131.86, change: 0.56, changePercent: 0.43, emoji: "✅" },
+      { symbol: "AMZN", name: "Amazon.com Inc.", price: 127.74, change: -0.89, changePercent: -0.69, emoji: "📉" },
+    ]
+    
+    setMarketData(fallbackMarketData)
+    
+    // Create chart data from fallback data
+    const labels = fallbackMarketData.map(stock => stock.symbol)
+    const changes = fallbackMarketData.map(stock => stock.changePercent)
+    
+    setChartData({
       labels,
       datasets: [
         {
-          label: "Searches",
-          data: [3, 5, 2, 8, 4, 6, 2],
+          label: "Daily Change %",
+          data: changes,
           borderColor: "rgba(59, 130, 246, 1)",
           backgroundColor: "rgba(59, 130, 246, 0.5)",
         },
       ],
-    }
-    setChartData(data)
-  }
-
-  const generateMockActivityData = () => {
-    const activities = [
-      { type: "search", company: "Apple", time: "2 hours ago", emoji: "🔍" },
-      { type: "save", company: "Microsoft", time: "1 day ago", emoji: "⭐" },
-      { type: "search", company: "Tesla", time: "2 days ago", emoji: "🔍" },
-      { type: "save", company: "Google", time: "3 days ago", emoji: "⭐" },
-      { type: "search", company: "Amazon", time: "4 days ago", emoji: "🔍" },
-    ]
-    setActivityData(activities)
+    })
+    
+    // Generate activity data based on fallback market data
+    const newActivityData = fallbackMarketData
+      .filter(stock => Math.abs(stock.changePercent) > 0.3)
+      .map(stock => {
+        const isPositive = stock.changePercent > 0
+        return {
+          type: isPositive ? "gain" : "loss",
+          company: stock.name,
+          time: "today",
+          emoji: stock.emoji,
+          change: stock.changePercent.toFixed(2) + "%"
+        }
+      })
+      .slice(0, 5)
+    
+    setActivityData(newActivityData)
+    setLastUpdated(new Date())
   }
 
   const fetchUserData = async () => {
@@ -149,7 +296,6 @@ export default function Dashboard() {
     )
   }
 
-  /* Comment out the authentication check to allow viewing the dashboard without being logged in
   if (!user) {
     return (
       <Layout>
@@ -162,7 +308,7 @@ export default function Dashboard() {
             You need to be signed in to view your personalized dashboard and track your financial research.
           </p>
           <button
-            onClick={() => supabase.auth.signInWithOAuth({ provider: "google" })}
+            onClick={() => window.location.href = "/login"}
             className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white hover:from-primary-hover hover:to-secondary rounded-full transition-colors hover-lift"
           >
             Sign In to Continue
@@ -171,7 +317,7 @@ export default function Dashboard() {
       </Layout>
     )
   }
-  */
+  
 
   return (
     <Layout>
@@ -191,9 +337,18 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold gradient-text slide-in-left">
             Welcome Back, {user?.email?.split("@")[0] || "Guest"} 👋
           </h1>
-          <div className="bg-card-bg p-2 rounded-lg border border-border slide-in-right">
-            <div className="text-sm text-muted-foreground">
-              Last login: {new Date().toLocaleDateString()}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchMarketData}
+              className="flex items-center gap-1 p-2 bg-card-bg hover:bg-card-hover rounded-lg transition-colors border border-border hover-lift"
+              title="Refresh market data"
+            >
+              <FaSyncAlt className={refreshAnimation ? "animate-spin" : ""} />
+            </button>
+            <div className="bg-card-bg p-2 rounded-lg border border-border slide-in-right">
+              <div className="text-sm text-muted-foreground">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </div>
             </div>
           </div>
         </div>
@@ -289,7 +444,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Market Trends */}
+          {/* Market Trends - Now with real-time data */}
           <div className="bg-card-bg p-6 rounded-lg shadow-lg border border-border hover-lift slide-up" style={{ animationDelay: "0.1s" }}>
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
@@ -298,38 +453,16 @@ export default function Dashboard() {
               <span>Market Trends</span>
             </h2>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-2 hover:bg-card-hover rounded-lg transition-colors">
-                <span>S&P 500</span>
-                <div className="flex items-center gap-1 text-success">
-                  <FaArrowUp />
-                  <span>0.38%</span>
-                  <span className="ml-1">🚀</span>
+              {marketData.slice(0, 4).map((stock, index) => (
+                <div key={stock.symbol} className="flex justify-between items-center p-2 hover:bg-card-hover rounded-lg transition-colors">
+                  <span>{stock.name}</span>
+                  <div className={`flex items-center gap-1 ${stock.changePercent >= 0 ? 'text-success' : 'text-error'}`}>
+                    {stock.changePercent >= 0 ? <FaArrowUp /> : <FaArrowDown />}
+                    <span>{Math.abs(stock.changePercent).toFixed(2)}%</span>
+                    <span className="ml-1">{stock.emoji}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center p-2 hover:bg-card-hover rounded-lg transition-colors">
-                <span>Nasdaq</span>
-                <div className="flex items-center gap-1 text-success">
-                  <FaArrowUp />
-                  <span>0.54%</span>
-                  <span className="ml-1">🔥</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-2 hover:bg-card-hover rounded-lg transition-colors">
-                <span>Dow Jones</span>
-                <div className="flex items-center gap-1 text-error">
-                  <FaArrowDown />
-                  <span>0.11%</span>
-                  <span className="ml-1">📉</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-2 hover:bg-card-hover rounded-lg transition-colors">
-                <span>Bitcoin</span>
-                <div className="flex items-center gap-1 text-success">
-                  <FaArrowUp />
-                  <span>1.24%</span>
-                  <span className="ml-1">💰</span>
-                </div>
-              </div>
+              ))}
               <div className="mt-4">
                 <Link href="/market" className="text-primary hover:text-primary-hover flex items-center gap-1">
                   <span>View full market data</span>
@@ -345,10 +478,19 @@ export default function Dashboard() {
               <div className="w-8 h-8 rounded-full bg-blue-400/10 flex items-center justify-center text-blue-400">
                 <FaHistory />
               </div>
-              <span>Weekly Activity</span>
+              <span>Market Performance</span>
             </h2>
             {chartData && <CompanyChart title="" data={chartData} defaultType="bar" />}
           </div>
+        </div>
+
+        {/* Stock Carousel - Top Performing Stocks */}
+        <div className="mb-8">
+          <StockCarousel
+            title="Top Performing Stocks"
+            description="Stocks with the highest positive change today"
+            filter={(stock) => (stock.changePercent || 0) > 0}
+          />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -468,13 +610,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity - Now with real market movements */}
         <div className="mt-8 bg-card-bg p-6 rounded-lg shadow-lg border border-border hover-lift slide-up">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-blue-400/10 flex items-center justify-center text-blue-400">
               <FaBell />
             </div>
-            <span>Recent Activity</span>
+            <span>Market Activity</span>
           </h2>
           <div className="space-y-4">
             {activityData.map((activity, index) => (

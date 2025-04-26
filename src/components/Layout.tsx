@@ -13,6 +13,7 @@ import {
   FaGraduationCap,
 } from "react-icons/fa"
 import ThemeToggle from "./ThemeToggle"
+import LoginButton from "./LoginLogoutButton"
 import { useState, useEffect } from "react"
 
 type LayoutProps = {
@@ -90,6 +91,8 @@ const Layout = ({ children }: LayoutProps) => {
               <FaGraduationCap />
               <span>Learn</span>
             </Link>
+            
+            <LoginButton />
           </div>
 
           <div className="flex items-center space-x-2">

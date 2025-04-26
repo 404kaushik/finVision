@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Layout from "@/components/Layout"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/utils/supabase/client"
 import Link from "next/link"
 import { FaStar, FaTrash, FaSpinner, FaSearch, FaSortAmountDown, FaExternalLinkAlt, FaEllipsisH } from "react-icons/fa"
 import ProtectedRoute from "@/components/ProtectedRoute"

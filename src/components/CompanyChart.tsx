@@ -123,15 +123,15 @@ const CompanyChart = ({ title, data, defaultType = "line" }: CompanyChartProps) 
   const renderChart = () => {
     switch (chartType) {
       case "line":
-        return <Line options={chartOptions} data={data} height={300} />
+        return <Line options={{...chartOptions, plugins: {...chartOptions.plugins, title: {...chartOptions.plugins.title, font: {size: 16, weight: "bold" as const}}}}} data={data} height={300} />
       case "bar":
-        return <Bar options={chartOptions} data={data} height={300} />
+        return <Bar options={{...chartOptions, plugins: {...chartOptions.plugins, title: {...chartOptions.plugins.title, font: {size: 16, weight: "bold" as const}}}}} data={data} height={300} />
       case "radar":
-        return <Radar options={chartOptions} data={data} height={300} />
+        return <Radar options={{...chartOptions, plugins: {...chartOptions.plugins, title: {...chartOptions.plugins.title, font: {size: 16, weight: "bold" as const}}}}} data={data} height={300} />
       case "doughnut":
-        return <Doughnut options={chartOptions} data={data} height={300} />
+        return <Doughnut options={{...chartOptions, plugins: {...chartOptions.plugins, title: {...chartOptions.plugins.title, font: {size: 16, weight: "bold" as const}}}}} data={data} height={300} />
       default:
-        return <Line options={chartOptions} data={data} height={300} />
+        return <Line options={{...chartOptions, plugins: {...chartOptions.plugins, title: {...chartOptions.plugins.title, font: {size: 16, weight: "bold" as const}}}}} data={data} height={300} />
     }
   }
 

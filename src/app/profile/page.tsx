@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Layout from "@/components/Layout"
 import { useAuth } from "@/context/AuthContext"
 import { FaUser, FaCog, FaSignOutAlt, FaSpinner, FaChartLine, FaStar } from "react-icons/fa"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/utils/supabase/client"
 import ProtectedRoute from "@/components/ProtectedRoute"
 
 export default function ProfilePage() {
