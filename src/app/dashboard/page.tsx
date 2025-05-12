@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Layout from "@/components/Layout"
 import { supabase } from "@/utils/supabase/client"
 import Link from "next/link"
@@ -24,6 +25,7 @@ import {
 import CompanyChart from "@/components/CompanyChart"
 import Confetti from "react-confetti"
 import { StockCarousel } from "@/components/StockCarousel"
+import Image from "next/image"
 
 interface Achievement {
   searches: boolean;
@@ -44,6 +46,8 @@ const getPerformanceEmoji = (changePercent: number): string => {
 }
 
 export default function Dashboard() {
+  const searchParams = useSearchParams()
+  const companyName = searchParams.get("company")
   const [user, setUser] = useState<any>(null)
   const [searches, setSearches] = useState<any[]>([])
   const [savedCompanies, setSavedCompanies] = useState<any[]>([])
@@ -51,9 +55,31 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<any>(null)
   const [activityData, setActivityData] = useState<any[]>([])
   const [showConfetti, setShowConfetti] = useState(false)
+  const [userFullName, setUserFullName] = useState<string | null>(null);
   const [marketData, setMarketData] = useState<any[]>([])
   const [refreshAnimation, setRefreshAnimation] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null)
+  const [companyLogos, setCompanyLogos] = useState<{[key: string]: string}>({})
+
+  // Helper function to extract domain from company name for logo
+  const getCompanyDomain = (companyName: string): string => {
+    // Remove common business entity types and clean up for domain extraction
+    const cleanName = companyName
+      .toLowerCase()
+      .replace(/inc\.?$|corp\.?$|corporation$|ltd\.?$|limited$|llc$/, '')
+      .trim()
+      .replace(/[^a-zA-Z0-9]/g, '')
+    
+    return cleanName
+  }
+
+  // Helper function to get company logo
+  const getCompanyLogo = (companyName: string): string => {
+    const domain = getCompanyDomain(companyName)
+    return `https://logo.clearbit.com/${domain}.com`
+  }
+ 
   
   const [achievements, setAchievements] = useState<Achievement>({
     searches: false, 
@@ -84,6 +110,30 @@ export default function Dashboard() {
       setTimeout(() => setShowConfetti(false), 5000)
     }
   }, [searches, savedCompanies, achievements])
+
+  // Load company logos for saved companies
+  useEffect(() => {
+    if (savedCompanies.length > 0) {
+      const logos: {[key: string]: string} = {}
+      savedCompanies.forEach(company => {
+        logos[company.company_name] = getCompanyLogo(company.company_name)
+      })
+      setCompanyLogos(logos)
+    }
+  }, [savedCompanies])
+
+  // Load company logos for search history
+  useEffect(() => {
+    if (searches.length > 0) {
+      const logos: {[key: string]: string} = { ...companyLogos }
+      searches.forEach(search => {
+        if (!logos[search.company_name]) {
+          logos[search.company_name] = getCompanyLogo(search.company_name)
+        }
+      })
+      setCompanyLogos(logos)
+    }
+  }, [searches])
 
   const fetchMarketData = async () => {
     try {
@@ -247,8 +297,21 @@ export default function Dashboard() {
       if (userData?.user) {
         setUser(userData.user)
 
+        // Fetch full_name from profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", userData.user.id) // match the user's ID
+          .single(); // only expect one profile
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+        } else if (profileData) {
+          setUserFullName(profileData.full_name); // <-- you need a new state variable
+        }
+
         // Fetch search history
-        const { data: searchData } = await supabase
+        const { data: searchData, error: searchError } = await supabase
           .from("searches")
           .select("*")
           .eq("user_id", userData.user.id)
@@ -259,8 +322,12 @@ export default function Dashboard() {
           setSearches(searchData)
         }
 
+        if (searchError) {
+          console.error("Error fetching search history:", searchError)
+        }
+
         // Fetch saved companies
-        const { data: savedData } = await supabase
+        const { data: savedData, error: savedError } = await supabase
           .from("saved_companies")
           .select("*")
           .eq("user_id", userData.user.id)
@@ -269,14 +336,62 @@ export default function Dashboard() {
         if (savedData) {
           setSavedCompanies(savedData)
         }
+
+        if (savedError) {
+          console.error("Error fetching saved companies:", savedError)
+        }
       }
-      
       // Set loading to false even if there's no user
       setLoading(false)
     } catch (error) {
       console.error("Error fetching user data:", error)
       setLoading(false)
     }
+  }
+
+  // Handle logo loading error by providing a fallback
+  const handleLogoError = (companyName: string) => {
+    return (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const target = event.target as HTMLImageElement;
+      target.onerror = null; // Prevent infinite callback loop
+      
+      // Set a fallback logo - first letter of company name in a colored circle
+      const logos = { ...companyLogos };
+      const firstLetter = companyName.charAt(0).toUpperCase();
+      
+      // Remove from logos object to trigger fallback display
+      logos[companyName] = "error";
+      setCompanyLogos(logos);
+    }
+  }
+
+  // Function to render company logo or fallback
+  const renderCompanyLogo = (companyName: string) => {
+    const logoUrl = companyLogos[companyName];
+    
+    if (logoUrl === "error") {
+      // Render fallback with first letter of company
+      const firstLetter = companyName.charAt(0).toUpperCase();
+      return (
+        <div 
+          className="w-8 h-8 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-semibold"
+        >
+          {firstLetter}
+        </div>
+      );
+    }
+    
+    // Render actual logo
+    return (
+      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden">
+        <img 
+          src={logoUrl}
+          alt={`${companyName} logo`}
+          className="w-6 h-6 object-contain"
+          onError={handleLogoError(companyName)}
+        />
+      </div>
+    );
   }
 
   if (loading) {
@@ -332,10 +447,10 @@ export default function Dashboard() {
         </div>
       )}
       
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto py-12">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold gradient-text slide-in-left">
-            Welcome Back, {user?.email?.split("@")[0] || "Guest"} 👋
+          <h1 className="text-5xl font-bold gradient-text slide-in-left">
+            Welcome, {userFullName || "Guest"} 👋
           </h1>
           <div className="flex items-center gap-3">
             <button
@@ -521,9 +636,12 @@ export default function Dashboard() {
                       className="flex justify-between items-center"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center">
-                          <span className="text-lg">🔍</span>
-                        </div>
+                        {companyLogos[search.company_name] ? 
+                          renderCompanyLogo(search.company_name) :
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center">
+                            <span className="text-lg">🔍</span>
+                          </div>
+                        }
                         <span>{search.company_name}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -579,9 +697,12 @@ export default function Dashboard() {
                       className="flex justify-between items-center"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 flex items-center justify-center">
-                          <span className="text-lg">⭐</span>
-                        </div>
+                      {companyLogos[company.company_name] ? 
+                          renderCompanyLogo(company.company_name) :
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 flex items-center justify-center">
+                            <span className="text-lg">⭐</span>
+                          </div>
+                        }
                         <span>{company.company_name}</span>
                       </div>
                       <div className="flex items-center">

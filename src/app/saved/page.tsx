@@ -4,11 +4,22 @@ import { useEffect, useState } from "react"
 import Layout from "@/components/Layout"
 import { supabase } from "@/utils/supabase/client"
 import Link from "next/link"
+import Image from "next/image"
 import { FaStar, FaTrash, FaSpinner, FaSearch, FaSortAmountDown, FaExternalLinkAlt, FaEllipsisH } from "react-icons/fa"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import Confetti from "@/components/Confetti"
 
 type SortOption = "newest" | "oldest" | "name_asc" | "name_desc"
+
+const getCompanyLogo = (companyName: string): string => {
+  // Extract likely domain name from company name
+  const simplifiedName = companyName
+    .toLowerCase()
+    .replace(/\s+inc\.?$|\s+corp\.?$|\s+corporation$|\s+llc$|\s+ltd\.?$/i, '')
+    .replace(/\s+/g, '')
+    
+  return `https://logo.clearbit.com/${simplifiedName}.com`
+}
 
 export default function SavedCompaniesPage() {
   const [companies, setCompanies] = useState<any[]>([])
@@ -21,6 +32,7 @@ export default function SavedCompaniesPage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState<string | null>(null)
+  const [logoErrors, setLogoErrors] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     fetchSavedCompanies()
@@ -121,6 +133,10 @@ export default function SavedCompaniesPage() {
     setTimeout(() => setShowConfetti(false), 3000)
   }
 
+  const handleLogoError = (companyId: string) => {
+    setLogoErrors(prev => ({ ...prev, [companyId]: true }))
+  }
+
   const toggleDropdown = (id: string) => {
     if (showDropdown === id) {
       setShowDropdown(null)
@@ -134,7 +150,7 @@ export default function SavedCompaniesPage() {
       <Layout>
         <Confetti active={showConfetti} />
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto py-24">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2 slide-in-left">
               <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary">
@@ -154,7 +170,7 @@ export default function SavedCompaniesPage() {
                 </button>
 
                 {showSortMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-card-bg border border-border rounded-lg shadow-lg z-10 scale-in">
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-10 scale-in">
                     <button
                       onClick={() => handleSort("newest")}
                       className={`w-full text-left px-4 py-2 hover:bg-card-hover transition-colors ${sortOption === "newest" ? "text-primary" : ""}`}
@@ -248,9 +264,22 @@ export default function SavedCompaniesPage() {
                     className="flex-grow p-2 flex items-center gap-3"
                     onClick={() => handleCompanyClick(company.company_name)}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center text-2xl">
-                      {company.emoji}
-                    </div>
+                    {!logoErrors[company.id] ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                        <Image
+                          src={getCompanyLogo(company.company_name)}
+                          alt={`${company.company_name} logo`}
+                          width={40}
+                          height={40}
+                          className="object-contain"
+                          onError={() => handleLogoError(company.id)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center text-2xl">
+                        {company.emoji}
+                      </div>
+                    )}
                     <div>
                       <h3 className="text-xl font-medium">{company.company_name}</h3>
                       <p className="text-sm text-muted-foreground">

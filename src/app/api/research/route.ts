@@ -1,12 +1,26 @@
 // app/api/research/route.ts
 import { type NextRequest, NextResponse } from "next/server"
+import { supabase } from "@/utils/supabase/client"
+
 import axios from "axios"
 
 const API_KEY = process.env.PERPLEXITY_API_KEY
 
+const researchCache = new Map<string, any>()
+
 export async function POST(req: NextRequest) {
   try {
-    const { companyName } = await req.json()
+    const { companyName, forceRefresh } = await req.json()
+    
+    // First, check if the result is already cached in memory
+    if (!forceRefresh && researchCache.has(companyName)) {
+      console.log("Returning in-memory cached research for:", companyName)
+      return NextResponse.json({
+        ...researchCache.get(companyName),
+        fromCache: true,
+        cacheSource: "memory"
+      })
+    }
 
     const response = await axios.post(
       "https://api.perplexity.ai/chat/completions",
@@ -50,6 +64,8 @@ export async function POST(req: NextRequest) {
         },
       },
     )
+
+    researchCache.set(companyName, response.data)
 
     return NextResponse.json(response.data)
   } catch (err: any) {

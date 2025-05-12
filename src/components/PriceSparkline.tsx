@@ -18,7 +18,7 @@ export function PriceSparkline({
   width = 100,
   height = 30,
   lineColor = "currentColor",
-  fillColor = "rgba(59, 130, 246, 0.2)",
+  fillColor = "rgba(0, 122, 255, 0.1)",
   showTooltip = false,
   animate = true,
 }: PriceSparklineProps) {
@@ -71,13 +71,12 @@ export function PriceSparkline({
 
   // Determine if trend is positive
   const isPositive = generatedData[generatedData.length - 1] >= generatedData[0]
-  const actualLineColor =
-    lineColor === "currentColor" ? (isPositive ? "rgb(34, 197, 94)" : "rgb(239, 68, 68)") : lineColor
+  const actualLineColor = lineColor === "currentColor" ? (isPositive ? "#22c55e" : "#ef4444") : lineColor
   const actualFillColor =
-    fillColor === "rgba(59, 130, 246, 0.2)"
+    fillColor === "rgba(0, 122, 255, 0.1)"
       ? isPositive
-        ? "rgba(34, 197, 94, 0.2)"
-        : "rgba(239, 68, 68, 0.2)"
+        ? "rgba(34, 197, 94, 0.1)"
+        : "rgba(239, 68, 68, 0.1)"
       : fillColor
 
   return (
@@ -130,15 +129,15 @@ export function PriceSparkline({
               width={50}
               height={20}
               rx={4}
-              fill="rgba(0,0,0,0.8)"
-              stroke="rgba(255,255,255,0.2)"
+              fill="var(--card)"
+              stroke="var(--border)"
             />
             <text
               x={points[hoveredPoint].x}
               y={points[hoveredPoint].y - 12}
               textAnchor="middle"
               fontSize={10}
-              fill="white"
+              fill="var(--card-foreground)"
             >
               {points[hoveredPoint].value.toFixed(2)}
             </text>
