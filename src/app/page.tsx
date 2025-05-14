@@ -12,6 +12,7 @@ import { StockCarousel } from "@/components/StockCarousel"
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSearch = (companyName: string) => {

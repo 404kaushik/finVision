@@ -37,7 +37,7 @@ export default function CompanyImages({ images }: { images: { id: string; url: s
 
   return (
     <motion.div 
-      className="w-[50rem] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
+      className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
       variants={container}
       initial="hidden"
       animate="show"

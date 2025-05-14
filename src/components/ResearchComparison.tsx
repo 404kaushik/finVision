@@ -41,7 +41,7 @@ export default function ResearchComparison({ companyName, userId }: ResearchComp
   }
 
   useEffect(() => {
-    if (companyName && userId) {
+    if (companyName && userId && userId.length > 0) {
       fetchComparison()
     }
   }, [companyName, userId, investmentAmount])

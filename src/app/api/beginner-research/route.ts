@@ -9,6 +9,23 @@ const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1519125323398-675f0ddb
 const researchCache: Record<string, { data: any, timestamp: number }> = {};
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+// Add this helper function at the top of the file
+function extractJsonFromResponse(content: string): string | null {
+  // First try to find JSON in code blocks
+  const jsonMatch = content.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
+  if (jsonMatch) {
+    return jsonMatch[1];
+  }
+
+  // If no code block, try to find JSON object directly
+  const jsonObjectMatch = content.match(/({[\s\S]*})/);
+  if (jsonObjectMatch) {
+    return jsonObjectMatch[1];
+  }
+
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { companyName } = await req.json()
@@ -119,19 +136,23 @@ export async function POST(req: NextRequest) {
           }
         )
 
-        const rawContent = response.data.choices?.[0]?.message?.content?.trim()
+        const rawContent = response.data.choices?.[0]?.message?.content?.trim();
         if (!rawContent) {
-          throw new Error("Empty response received.")
+          throw new Error("Empty response received.");
         }
 
-        let extractedJson = rawContent
-        const jsonMatch = rawContent.match(/```json\s*({[\s\S]*?})\s*```/)
-        if (jsonMatch) {
-          extractedJson = jsonMatch[1]
+        const extractedJson = extractJsonFromResponse(rawContent);
+        if (!extractedJson) {
+          throw new Error("Could not extract JSON from response");
         }
 
         try {
-          beginnerData = JSON.parse(extractedJson)
+          beginnerData = JSON.parse(extractedJson);
+          
+          // Validate the required structure
+          if (!beginnerData.companyName || !beginnerData.ticker) {
+            throw new Error("Invalid response structure");
+          }
           
           // Store in cache
           researchCache[cacheKey] = {
@@ -140,12 +161,14 @@ export async function POST(req: NextRequest) {
           };
           
         } catch (parseErr: any) {
-          console.warn("⚠️ Failed to parse JSON:", parseErr)
-          beginnerData = null
+          console.warn("⚠️ Failed to parse JSON:", parseErr);
+          console.warn("Raw content:", rawContent);
+          console.warn("Extracted JSON:", extractedJson);
+          beginnerData = null;
         }
       } catch (err: any) {
-        console.error("❌ Research error:", err.response?.data || err.message)
-        return NextResponse.json({ error: "Failed to fetch research data" }, { status: 500 })
+        console.error("❌ Research error:", err.response?.data || err.message);
+        return NextResponse.json({ error: "Failed to fetch research data" }, { status: 500 });
       }
     }
 

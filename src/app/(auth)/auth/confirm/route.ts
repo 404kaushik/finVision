@@ -17,17 +17,38 @@ export async function GET(request: NextRequest) {
   if (token_hash && type) {
     const supabase = createClient()
 
-    const { error } = await (await supabase).auth.verifyOtp({
-      type,
-      token_hash,
-    })
-    if (!error) {
-      redirectTo.searchParams.delete('next')
+    try {
+      const { error } = await (await supabase).auth.verifyOtp({
+        type,
+        token_hash,
+      })
+
+      if (!error) {
+        redirectTo.searchParams.delete('next')
+        return NextResponse.redirect(redirectTo)
+      }
+
+      // Handle specific error cases
+      if (error.message.includes('expired')) {
+        redirectTo.pathname = '/error'
+        redirectTo.searchParams.set('error', 'Link expired. Please request a new one.')
+        return NextResponse.redirect(redirectTo)
+      }
+
+      if (error.message.includes('invalid')) {
+        redirectTo.pathname = '/error'
+        redirectTo.searchParams.set('error', 'Invalid link. Please try again.')
+        return NextResponse.redirect(redirectTo)
+      }
+    } catch (error) {
+      redirectTo.pathname = '/error'
+      redirectTo.searchParams.set('error', 'An unexpected error occurred.')
       return NextResponse.redirect(redirectTo)
     }
   }
 
-  // return the user to an error page with some instructions
+  // Invalid or missing parameters
   redirectTo.pathname = '/error'
+  redirectTo.searchParams.set('error', 'Invalid confirmation link.')
   return NextResponse.redirect(redirectTo)
 }

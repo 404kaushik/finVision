@@ -154,23 +154,25 @@ export default function BeginnerResearch({ companyName, onClose }: BeginnerResea
       
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) throw new Error("User not logged in")
+
+      const normalizedCompanyName = companyName.toLowerCase();
   
       const { data: existingResearch, error: fetchError } = await supabase
-        .from("saved_companies")
-        .select("deep_research, created_at_deep_research")
+        .from("saved_research")
+        .select("deep_research_data, created_deepresearch_at")
         .eq("user_id", user.id)
-        .eq("company_name", companyName)
+        .eq("company_name", normalizedCompanyName)
         .single()
   
       if (fetchError && fetchError.code !== 'PGRST116') {
         throw fetchError
       }
   
-      if (existingResearch?.deep_research) {
+      if (existingResearch?.deep_research_data) {
         console.log("Found existing deep research in database")
-        setResearch(existingResearch.deep_research)
+        setResearch(existingResearch.deep_research_data)
         setDeepResearchSaved(true)
-        setLastSavedAt(existingResearch.created_at_deep_research)
+        setLastSavedAt(existingResearch.created_deepresearch_at)
         setLoadingProgress(100)
         return
       }
@@ -222,15 +224,17 @@ export default function BeginnerResearch({ companyName, onClose }: BeginnerResea
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) throw new Error("User not logged in")
+
+      const normalizedCompanyName = companyName.toLowerCase();
   
       const { error: updateError } = await supabase
-        .from("saved_companies")
+        .from("saved_research")
         .upsert(
           {
             user_id: user.id,
-            company_name: companyName,
-            deep_research: research,
-            created_at_deep_research: new Date().toISOString()
+            company_name: normalizedCompanyName,
+            deep_research_data: research,
+            created_deepresearch_at: new Date().toISOString()
           },
           { onConflict: "user_id,company_name" }
         )
@@ -735,8 +739,8 @@ export default function BeginnerResearch({ companyName, onClose }: BeginnerResea
                     <span>Company Images</span>
                   </h3>
                   {research && research.images && research.images.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <CompanyImages images={research.images} />
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                      <CompanyImages images={research.images}/>
                     </div>
                   ) : (
                     <p className="text-muted-foreground">No images available for this company.</p>

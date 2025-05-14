@@ -15,6 +15,8 @@ import {
   NewspaperIcon,
   FileTextIcon,
   BarChart2Icon,
+  DatabaseIcon,
+  CloudIcon,
   ShareIcon,
   DownloadIcon,
   LightbulbIcon,
@@ -35,6 +37,7 @@ import {
   PieChartIcon,
   ZapIcon,
   GitCompareIcon,
+  RefreshCcwIcon
 } from "lucide-react"
 import { FaClock } from "react-icons/fa"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -55,6 +58,7 @@ import { cn } from "@/lib/utils"
 import DeepResearch from "@/components/BeginnerResearch"
 import DeepResearchSkeleton from "@/components/DeepResearchSkeleton"
 import ResearchComparison from "@/components/ResearchComparison"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 // Helper function to get sentiment emoji
 const getSentimentEmoji = (sentiment: number): string => {
   if (sentiment >= 80) return "🚀" // Very positive
@@ -101,6 +105,9 @@ const financialTerms = {
   Open: "The price at which the stock started trading today.",
   "Prev Close": "The final price the stock traded at yesterday.",
 }
+
+// Add this type at the top with other type definitions
+type FinancialTermKey = keyof typeof financialTerms;
 
 // Helper function to generate beginner-friendly explanations for metrics
 function getMetricExplanation(metricName: string, score: number): string {
@@ -241,12 +248,264 @@ function XIcon(props: React.ComponentProps<"svg">) {
   )
 }
 
+// Add this component for the financials tab
+function FinancialsTab({ financialData, loading, chartData }: { financialData: any, loading: boolean, chartData: any }) {
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 min-h-[60vh]">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Loader2Icon className="h-12 w-12 animate-spin text-primary mb-4" />
+        </motion.div>
+        <motion.p
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-muted-foreground"
+        >
+          Fetching financial data...
+        </motion.p>
+      </div>
+    )
+  }
+
+  if (!financialData) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="p-8 text-center text-gray-500 min-h-[60vh] flex flex-col items-center justify-center"
+      >
+        <AlertTriangleIcon className="h-12 w-12 mb-4 text-amber-500" />
+        <p className="text-lg">No financial data available</p>
+        <Button variant="outline" className="mt-4">
+          <RefreshCcwIcon className="h-4 w-4 mr-2" /> Try Again
+        </Button>
+      </motion.div>
+    )
+  }
+
+  // Create sections for staggered animation
+  const sections = [
+    { id: "market-overview", title: "Market Overview", icon: <DollarSignIcon className="h-5 w-5" />, data: financialData.marketData },
+    { id: "financial-ratios", title: "Key Financial Ratios", icon: <PieChartIcon className="h-5 w-5" />, data: financialData.ratios },
+    { id: "financial-statements", title: "Financial Statements", icon: <FileTextIcon className="h-5 w-5" />, data: financialData.financials },
+    { id: "company-profile", title: "Company Profile", icon: <GlobeIcon className="h-5 w-5" />, data: financialData.profile }
+  ]
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-8"
+    >
+      {/* Financial Summary Card */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary/5 to-primary/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <ZapIcon className="h-6 w-6 text-primary" />
+              Financial Snapshot
+            </CardTitle>
+            <CardDescription>
+              Key metrics and performance indicators at a glance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {Object.entries(financialData.marketData).slice(0, 4).map(([key, value], index) => {
+                // Get the change percentage for emoji
+                const changePercent = key.toLowerCase().includes('change') ? 
+                  parseFloat(String(value).replace(/[^0-9.-]+/g, '')) : 
+                  parseFloat(String(financialData.marketData['Change %']).replace(/[^0-9.-]+/g, ''));
+                
+                return (
+                  <motion.div 
+                    key={key}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                    className="flex flex-col space-y-1"
+                  >
+                    <p className="text-sm text-muted-foreground">{key}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold">{String(value)}</p>
+                      {key.toLowerCase().includes('change') && (
+                        <span className="text-xl" title={`${changePercent >= 0 ? 'Positive' : 'Negative'} change`}>
+                          {getPerformanceEmoji(changePercent)}
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Stock Price Chart with Animation */}
+      <motion.div
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+      >
+        <Card className="overflow-hidden border-none shadow-md">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart2Icon className="h-5 w-5 text-primary" />
+              Stock Price History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="p-4 h-[300px]">
+              <CompanyChart data={chartData} title="Stock Price History" />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Animated Sections */}
+      <AnimatePresence>
+        {sections.map((section, index) => (
+          <motion.div
+            key={section.id}
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 + (index * 0.15), duration: 0.5 }}
+            className="mb-6"
+          >
+            <Accordion type="single" collapsible defaultValue={index === 0 ? section.id : undefined}>
+              <AccordionItem value={section.id} className="border-none">
+                <AccordionTrigger className="py-4 px-6 bg-card rounded-t-lg border-2 hover:no-underline">
+                  <div className="flex items-center gap-2 text-lg font-medium">
+                    {section.icon}
+                    {section.title}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-card/50 rounded-b-lg p-0 overflow-hidden">
+                  <div className="p-6 pt-2">
+                    {section.id === "company-profile" ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {Object.entries(section.data).map(([key, value]) => (
+                            key !== 'description' && key !== 'logo' && key !== 'weburl' && (
+                              <motion.div 
+                                key={key}
+                                initial={{ x: -10, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-1"
+                              >
+                                <p className="text-sm text-muted-foreground">{key}</p>
+                                <p className="font-medium">{String(value)}</p>
+                              </motion.div>
+                            )
+                          ))}
+                        </div>
+                        {section.data.description && (
+                          <motion.div 
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2, duration: 0.4 }}
+                            className="mt-4 p-4 bg-muted/50 rounded-lg"
+                          >
+                            <p className="text-sm text-muted-foreground">Description</p>
+                            <p className="mt-1">{section.data.description}</p>
+                          </motion.div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {Object.entries(section.data).map(([key, value], i) => {
+                          // Convert value to number for comparison
+                          const numValue = parseFloat(String(value).replace(/[^0-9.-]+/g, ''));
+                          const isPositive = !isNaN(numValue) && numValue > 0;
+                          
+                          return (
+                            <motion.div 
+                              key={key}
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: i * 0.05, duration: 0.4 }}
+                              className="group"
+                            >
+                              {section.id === "financial-ratios" ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="space-y-1 p-3 rounded-lg transition-all hover:bg-primary/5 cursor-help">
+                                        <div className="flex justify-between items-center">
+                                          <p className="text-sm text-muted-foreground">{key}</p>
+                                          <InfoIcon className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-lg font-semibold">{String(value)}</p>
+                                          {!isNaN(numValue) && (
+                                            <span className="text-lg" title={`${isPositive ? 'Positive' : 'Negative'} metric`}>
+                                              {getPerformanceEmoji(numValue)}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>{financialTerms[key as FinancialTermKey] || 'No description available'}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <div className="space-y-1 p-3 rounded-lg transition-all hover:bg-primary/5">
+                                  <p className="text-sm text-muted-foreground">{key}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-lg font-semibold">{String(value)}</p>
+                                    {!isNaN(numValue) && (
+                                      <span className="text-lg" title={`${isPositive ? 'Positive' : 'Negative'} metric`}>
+                                        {getPerformanceEmoji(numValue)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Interactive Financial Health Card */}
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.5 }}
+        className="mt-8"
+      >        
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function ResearchPage() {
   const searchParams = useSearchParams()
   const companyName = searchParams.get("company")
   
 
   const [research, setResearch] = useState<any>(null)
+  const [researchData, setResearchData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -273,6 +532,8 @@ export default function ResearchPage() {
   const [deepResearchLoading, setDeepResearchLoading] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [userId, setUserId] = useState<string>("")  
+  const [dataSource, setDataSource] = useState<"database" | "api" | null>(null)
+  const [showDataSourceBadge, setShowDataSourceBadge] = useState(false)
 
   
   
@@ -314,10 +575,17 @@ export default function ResearchPage() {
       const response = await fetch(`/api/financials?company=${encodeURIComponent(company)}`)
 
       if (!response.ok) {
-        throw new Error("Failed to fetch financial data")
+        const errorData = await response.json()
+        throw new Error(errorData.details || "Failed to fetch financial data")
       }
 
       const data = await response.json()
+      
+      // Validate the response data
+      if (!data || !data.marketData || !data.ratios) {
+        throw new Error("Invalid data format received from API")
+      }
+
       setFinancialData(data)
 
       // Also update chart data with real stock price data if available
@@ -335,21 +603,11 @@ export default function ResearchPage() {
           ],
         }
 
-        // Add industry average if available
-        if (data.industryAverage && data.industryAverage.length > 0) {
-          chartData.datasets.push({
-            label: "Industry Average",
-            data: data.industryAverage.map((item: any) => item.value),
-            borderColor: "rgba(139, 92, 246, 1)",
-            borderWidth: 2,
-          })
-        }
-
         setChartData(chartData)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching financial data:", error)
-      setFinancialError("Failed to load financial data. Please try again.")
+      setFinancialError(error.message || "Failed to load financial data. Please try again.")
     } finally {
       setFinancialLoading(false)
     }
@@ -389,7 +647,7 @@ export default function ResearchPage() {
 
   useEffect(() => {
     if (companyName) {
-      fetchResearch()
+      fetchResearch(companyName)
       // Only generate mock data if we don't have real data yet
       if (!chartData) {
         generateMockChartData()
@@ -448,78 +706,143 @@ export default function ResearchPage() {
     setChartData(data)
   }
 
-  const fetchResearch = async () => {
-    if (!companyName) return
-
-    setLoading(true)
-    setError(null)
-    setLoadingProgress(0)
-
+  const fetchResearch = async (companyName: string) => {
+    if (!companyName) return;
+    
+    // Reset states before fetching
+    setLoading(true);
+    setError(null);
+    setLoadingProgress(10);
+    setDataSource(null);
+    
+    // Reset progress animation
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 500);
+    
     try {
-      // Log the search in Supabase
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) throw new Error("User not logged in")
-      console.log(authError)
-
-      // 2. Check if this company has already been saved
-      const { data: existing, error: fetchError } = await supabase
-      .from("saved_companies")
-      .select("company_data, created_at_research, created_at")  // Add created_at to the selection
-      .eq("user_id", user.id)
-      .eq("company_name", companyName)
+      // Get current user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("User not logged in");
       
-
-      if (fetchError) throw fetchError
-
-      if (existing && existing.length > 0) {
-        console.log("Loaded from Supabase")
-        setSaved(true)
-        setLastSavedAt(existing[0].created_at)  // Set the last saved timestamp
-      }
+      // Check if data exists in saved_research - use consistently lowercase company name
+      const normalizedCompanyName = companyName.toLowerCase();
+      console.log("Checking database for:", normalizedCompanyName);
+      
+      const { data: existing, error: fetchError } = await supabase
+        .from("saved_research")
+        .select("research_data, created_research_at")
+        .eq("user_id", user.id)
+        .eq("company_name", normalizedCompanyName)
+        .single();
+      
+      console.log("Database result:", existing, fetchError);
+      
+      // If we have saved data, use it
+      if (!fetchError && existing && existing.research_data) {
+        console.log("Found and loading from database:", existing);
         
-      // Get research from Perplexity API
-      const data = await getCompanyResearch(companyName)
-
-      // Parse JSON from response
-      try {
-        // Extract the content from the assistant's message
-        const content = data.choices[0].message.content
-        // Try to parse it as JSON, but have a fallback
-        let parsedData
+        // Set saved state and timestamp
+        setSaved(true);
+        setLastSavedAt(existing.created_research_at);
+        
+        let parsedData;
         try {
-          parsedData = JSON.parse(content)
+          // Check if research_data is a string that needs parsing
+          if (typeof existing.research_data === 'string') {
+            parsedData = JSON.parse(existing.research_data);
+          } else {
+            // If it's already an object, use it directly
+            parsedData = existing.research_data;
+          }
+          
+          // Add sentiment scores and emojis if they don't exist
+          if (parsedData.metrics && parsedData.metrics.length > 0) {
+            parsedData.metrics = parsedData.metrics.map((metric: any) => ({
+              ...metric,
+              emoji: metric.emoji || getSentimentEmoji(metric.score || 50),
+            }));
+          }
+          
+          setResearch(parsedData);
+          setDataSource("database");
+          setShowDataSourceBadge(true);
+          setTimeout(() => setShowDataSourceBadge(false), 5000);
+          setLoadingProgress(100);
+          setTimeout(() => setLoading(false), 500);
+          
+          // IMPORTANT: Clear the interval and return early
+          clearInterval(interval);
+          return;
+        } catch (e) {
+          console.error("Error parsing stored research data:", e);
+          // Continue to API call if parsing fails
+        }
+      } else {
+        console.log("No saved data found or error fetching:", fetchError);
+      }
+      
+      // If we reach here, we need to fetch from API
+      console.log("Fetching from API for:", companyName);
+      
+      // Reset saved state since we're getting fresh data
+      setSaved(false);
+      setLastSavedAt(null);
+      
+      // Fetch from Perplexity API
+      const data = await getCompanyResearch(companyName);
+      setResearchData(data);
+      setDataSource("api"); // Set data source to API
+      setShowDataSourceBadge(true); // Show badge
+      setTimeout(() => setShowDataSourceBadge(false), 5000);
+      
+      // Process response
+      try {
+        const content = data.choices[0].message.content;
+        const sanitizedContent = content.replace(/[""]/g, '"')
 
+        let parsedData;
+        try {
+          parsedData = JSON.parse(sanitizedContent);
+          
           // Add sentiment scores and emojis if they don't exist
           if (parsedData.metrics && parsedData.metrics.length > 0) {
             parsedData.metrics = parsedData.metrics.map((metric: any) => ({
               ...metric,
               emoji: getSentimentEmoji(metric.score || 50),
-            }))
+            }));
           }
         } catch (e) {
-          // If it's not valid JSON, just use the text content
           parsedData = {
-            overview: content,
+            overview: sanitizedContent,
             metrics: [],
-            analysis: content,
-          }
+            analysis: sanitizedContent,
+          };
         }
-        setResearch(parsedData)        
+        setResearch(parsedData);
       } catch (e) {
+        console.error("Error parsing research data:", e);
         setResearch({
           overview: "Failed to parse the research data properly. Please try again.",
           metrics: [],
           analysis: data.choices[0].message.content,
-        })
+        });
       }
     } catch (err) {
-      console.error("Error fetching research:", err)
-      setError("Failed to fetch research data. Please try again.")
+      console.error("Error fetching research:", err);
+      setError("Failed to fetch research data. Please try again.");
     } finally {
-      setLoadingProgress(100)
-      setTimeout(() => setLoading(false), 500) // Small delay for smooth transition
+      clearInterval(interval);
+      setLoadingProgress(100);
+      setTimeout(() => setLoading(false), 500);
     }
-  }
+  };
 
   const saveCompany = async () => {
     setSaving(true)
@@ -535,16 +858,32 @@ export default function ResearchPage() {
       }
 
       const currentTimestamp = new Date().toISOString()
+      const normalizedCompanyName = companyName?.toLowerCase() || "";
+
+      let dataToSave = research;
+
+      // If researchData is available (from API), use that as the source
+      if (researchData) {
+        try {
+          const content = researchData.choices[0].message.content;
+          const sanitizedContent = content.replace(/[""]/g, '"');
+          dataToSave = JSON.parse(sanitizedContent);
+        } catch (e) {
+          console.error("Error parsing API data for saving:", e);
+          // Fall back to the current research state
+        }
+      }
+
+      console.log("Saving to database:", normalizedCompanyName, user.id);
 
       const { error: upsertError } = await supabase
-      .from("saved_companies")
+      .from("saved_research")
       .upsert(
         {
           user_id: user.id,
-          company_name: companyName,
-          company_data: research,
-          created_at_research: currentTimestamp,
-          created_at: currentTimestamp  // Add the current timestamp
+          company_name: normalizedCompanyName,
+          research_data: dataToSave,
+          created_research_at: currentTimestamp
         },
         { onConflict: "user_id,company_name" } // avoid duplicate key error
       )
@@ -601,16 +940,16 @@ export default function ResearchPage() {
   
       // ✅ 1. Check if deep research already exists
       const { data, error } = await supabase
-        .from("saved_companies")
-        .select("deep_research")
+        .from("saved_research")
+        .select("deep_research_data, created_deepresearch_at")
         .eq("user_id", user.id)
         .eq("company_name", companyName)
 
       if (error) throw error
 
   
-      if (data && data.length > 0 && data[0].deep_research) {
-        setDeepResearchData(data[0].deep_research)
+      if (data && data.length > 0 && data[0].deep_research_data) {
+        setDeepResearchData(data[0].created_deepresearch_at)
         setDeepResearchSaved(true)
       } else {
         setDeepResearchData(null) // not saved yet
@@ -956,372 +1295,7 @@ export default function ResearchPage() {
           </div>
         )
       case "financials":
-        return (
-          <div className="space-y-8 mt-6">
-            {financialLoading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Loader2Icon className="animate-spin text-4xl mb-4" />
-                <p className="text-muted-foreground">Loading financial data...</p>
-              </div>
-            ) : financialError ? (
-              <Card className="border-destructive/50 bg-destructive/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-destructive">
-                    <AlertTriangleIcon className="h-5 w-5" />
-                    <span>Error</span>
-                  </CardTitle>
-                  <CardDescription className="text-destructive/80">
-                    We encountered a problem while fetching financial data
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>{financialError}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="destructive" onClick={() => fetchFinancialData(companyName || "")}>
-                    Try Again
-                  </Button>
-                </CardFooter>
-              </Card>
-            ) : (
-              <>
-                {/* Stock Price Chart */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Card className="overflow-hidden border">
-                    <CardHeader className="pb-3 bg-muted/30">
-                      <CardTitle className="flex items-center gap-2">
-                        <TrendingUpIcon className="h-5 w-5 text-primary" />
-                        <span>Stock Price History</span>
-                      </CardTitle>
-                      <CardDescription>How {companyName}'s stock price has changed over time</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="bg-muted/30 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">What am I looking at?</h3>
-                          <p className="text-sm text-muted-foreground">
-                            This chart shows how much one share of {companyName} stock costs over time.
-                            <strong> Going up</strong> means the stock is gaining value, <strong>going down</strong>{" "}
-                            means it's losing value. The purple line shows how similar companies are performing for
-                            comparison.
-                          </p>
-                        </div>
-                        <div className="h-80 w-full">
-                          {chartData ? (
-                            <CompanyChart data={chartData} title={`${companyName} Stock Price`} />
-                          ) : (
-                            <div className="flex items-center justify-center h-full">
-                              <p className="text-muted-foreground">No chart data available</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-                {/* Financial Metrics */}
-                {financialData && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                  >
-                    <Card className="overflow-hidden border">
-                      <CardHeader className="pb-3 bg-muted/30">
-                        <CardTitle className="flex items-center gap-2">
-                          <BarChart2Icon className="h-5 w-5 text-primary" />
-                          <span>Financial Health Check</span>
-                        </CardTitle>
-                        <CardDescription>
-                          Key numbers that show how financially healthy {companyName} is
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          {/* Key Ratios */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-medium">Important Ratios</h3>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowGlossary(false)}
-                                className="text-xs flex items-center gap-1"
-                              >
-                                <BookIcon className="h-3 w-3" />
-                                <span>What do these mean?</span>
-                              </Button>
-                            </div>
-                            {financialData.ratios ? (
-                              <div className="space-y-3">
-                                {Object.entries(financialData.ratios).map(
-                                  ([key, value]: [string, any], index: number) => (
-                                    <motion.div
-                                      key={index}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                                      className="group"
-                                    >
-                                      <div
-                                        className="flex justify-between items-center p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors cursor-help"
-                                        onClick={() => showTermDefinition(key)}
-                                      >
-                                        <span className="font-medium flex items-center gap-1">
-                                          {key}
-                                          <InfoIcon className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </span>
-                                        <span className="font-semibold">{value}</span>
-                                      </div>
-                                      <div className="text-xs text-muted-foreground mt-1 ml-3 hidden group-hover:block">
-                                        {financialTerms[key as keyof typeof financialTerms] ||
-                                          `${key} is a financial metric used to evaluate company performance.`}
-                                      </div>
-                                    </motion.div>
-                                  ),
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-muted-foreground">No ratio data available</p>
-                            )}
-                          </div>
-
-                          {/* Latest Financials */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-medium">Latest Numbers</h3>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="text-xs flex items-center gap-1">
-                                      <PieChartIcon className="h-3 w-3" />
-                                      <span>What are these?</span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-xs">
-                                    <p>
-                                      These are the most recent financial figures reported by {companyName}. They show
-                                      how much money the company is making and spending.
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                            {financialData.financials ? (
-                              <div className="space-y-3">
-                                {Object.entries(financialData.financials).map(
-                                  ([key, value]: [string, any], index: number) => {
-                                    // Determine if the value is positive or negative for styling
-                                    const isPositive = typeof value === "number" && value > 0
-                                    const isNegative = typeof value === "number" && value < 0
-
-                                    return (
-                                      <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                                        className="group"
-                                      >
-                                        <div
-                                          className="flex justify-between items-center p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors cursor-help"
-                                          onClick={() => showTermDefinition(key)}
-                                        >
-                                          <span className="font-medium flex items-center gap-1">
-                                            {key}
-                                            <InfoIcon className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                          </span>
-                                          <span
-                                            className={cn(
-                                              "font-semibold",
-                                              isPositive && "text-green-600 dark:text-green-500",
-                                              isNegative && "text-red-600 dark:text-red-500",
-                                            )}
-                                          >
-                                            {typeof value === "number"
-                                              ? new Intl.NumberFormat("en-US", {
-                                                  style: "currency",
-                                                  currency: "USD",
-                                                  notation: "compact",
-                                                  maximumFractionDigits: 2,
-                                                }).format(value)
-                                              : value}
-                                          </span>
-                                        </div>
-                                        <div className="text-xs text-muted-foreground mt-1 ml-3 hidden group-hover:block">
-                                          {financialTerms[key as keyof typeof financialTerms] ||
-                                            `${key} is a financial metric used to evaluate company performance.`}
-                                        </div>
-                                      </motion.div>
-                                    )
-                                  },
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-muted-foreground">No financial data available</p>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-
-                {/* Market Data */}
-                {financialData && financialData.marketData && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                  >
-                    <Card className="overflow-hidden border">
-                      <CardHeader className="pb-3 bg-muted/30">
-                        <CardTitle className="flex items-center gap-2">
-                          <GlobeIcon className="h-5 w-5 text-primary" />
-                          <span>Today's Trading</span>
-                        </CardTitle>
-                        <CardDescription>How {companyName}'s stock is performing in the market today</CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {Object.entries(financialData.marketData).map(
-                            ([key, value]: [string, any], index: number) => {
-                              // Format the display based on the type of data
-                              let displayValue = value
-                              let icon = null
-
-                              if (key.toLowerCase().includes("change") || key.toLowerCase().includes("percent")) {
-                                const numValue = Number.parseFloat(value)
-                                const isPositive = numValue > 0
-                                displayValue = `${isPositive ? "+" : ""}${numValue.toFixed(2)}%`
-                                icon = isPositive ? (
-                                  <TrendingUpIcon className="h-3 w-3 text-green-600 dark:text-green-500" />
-                                ) : (
-                                  <TrendingDownIcon className="h-3 w-3 text-red-600 dark:text-red-500" />
-                                )
-                              }
-
-                              return (
-                                <motion.div
-                                  key={index}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                                  className="p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-help"
-                                  onClick={() => showTermDefinition(key)}
-                                >
-                                  <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                                    {key}
-                                    <InfoIcon className="h-3 w-3 opacity-50" />
-                                  </p>
-                                  <p className="text-xl font-semibold flex items-center gap-1">
-                                    {icon}
-                                    {displayValue}
-                                  </p>
-                                </motion.div>
-                              )
-                            },
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-
-                {/* Beginner's Guide to Financials */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <Card className="overflow-hidden border bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2">
-                        <GraduationCapIcon className="h-5 w-5 text-primary" />
-                        <span>Understanding Financial Data</span>
-                      </CardTitle>
-                      <CardDescription>A simple guide for beginners</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="stock-price">
-                          <AccordionTrigger>What does the stock price tell me?</AccordionTrigger>
-                          <AccordionContent>
-                            <p className="py-2">
-                              The stock price shows how much it costs to buy one share of the company. When people think
-                              the company will do well, they buy more shares and the price goes up. When they're worried
-                              about the company's future, they sell shares and the price goes down.
-                            </p>
-                            <p className="py-2">
-                              Remember: A higher stock price doesn't always mean a "better" company. Large, established
-                              companies might have lower prices but be more stable investments.
-                            </p>
-                          </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem value="ratios">
-                          <AccordionTrigger>What are financial ratios?</AccordionTrigger>
-                          <AccordionContent>
-                            <p className="py-2">
-                              Financial ratios are tools that help you compare companies of different sizes. They're
-                              like grades on a report card for the company's financial health.
-                            </p>
-                            <p className="py-2">
-                              For example, the P/E Ratio (Price to Earnings) tells you how much investors are willing to
-                              pay for each dollar of profit. A lower P/E might mean the stock is undervalued
-                              (potentially a good deal).
-                            </p>
-                          </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem value="revenue">
-                          <AccordionTrigger>What's the difference between Revenue and Profit?</AccordionTrigger>
-                          <AccordionContent>
-                            <p className="py-2">
-                              <strong>Revenue</strong> is all the money a company brings in from selling its products or
-                              services. It's like your total paycheck before any deductions.
-                            </p>
-                            <p className="py-2">
-                              <strong>Profit</strong> (or Net Income) is what's left after paying all expenses, costs,
-                              and taxes. It's like your take-home pay after all deductions.
-                            </p>
-                            <p className="py-2">
-                              A company can have huge revenue but still lose money if its expenses are too high.
-                            </p>
-                          </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem value="good-investment">
-                          <AccordionTrigger>How do I know if this is a good investment?</AccordionTrigger>
-                          <AccordionContent>
-                            <p className="py-2">
-                              There's no single number that tells you if a stock is a good investment. Instead, look at:
-                            </p>
-                            <ul className="list-disc pl-6 py-2 space-y-1">
-                              <li>Is the company growing its revenue and profits?</li>
-                              <li>Does it have more assets than debts?</li>
-                              <li>Is it performing better than similar companies?</li>
-                              <li>Do you understand and believe in what the company does?</li>
-                              </ul>
-                            <p className="py-2">
-                              Remember: Past performance doesn't guarantee future results, and it's usually best to
-                              invest in multiple companies rather than just one.
-                            </p>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </>
-            )}
-          </div>
-        )
+        return <FinancialsTab financialData={financialData} loading={financialLoading} chartData={chartData} />
       case "news":
         return (
           <div className="space-y-8 mt-6">
@@ -1585,6 +1559,35 @@ export default function ResearchPage() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold tracking-tight">{companyName}</h1>
+                {/* Data Source Badge */}
+                <AnimatePresence>
+                    {showDataSourceBadge && dataSource && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8, y: -5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.3 }}
+                        className={cn(
+                          "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1",
+                          dataSource === "database" 
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                        )}
+                      >
+                        {dataSource === "database" ? (
+                          <>
+                            <DatabaseIcon className="h-3 w-3" />
+                            <span>Loaded from Database</span>
+                          </>
+                        ) : (
+                          <>
+                            <CloudIcon className="h-3 w-3" />
+                            <span>Fresh from API</span>
+                          </>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 <p className="text-muted-foreground">Financial Research & Analysis</p>
               </div>
             </div>
@@ -1966,7 +1969,7 @@ export default function ResearchPage() {
                   <p>{error}</p>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="destructive" onClick={fetchResearch}>
+                  <Button variant="destructive" onClick={() => fetchResearch(companyName)}>
                     Try Again
                   </Button>
                 </CardFooter>

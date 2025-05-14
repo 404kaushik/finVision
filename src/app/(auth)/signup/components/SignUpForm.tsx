@@ -1,5 +1,7 @@
-import Link from "next/link";
+"use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,8 +13,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signup } from "@/lib/auth-actions";
+import { toast } from "sonner";
 
 export function SignUpForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (formData: FormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await signup(formData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      toast.error(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
@@ -22,7 +42,7 @@ export function SignUpForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action="">
+        <form action={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -32,6 +52,7 @@ export function SignUpForm() {
                   id="first-name"
                   placeholder="Max"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="grid gap-2">
@@ -41,6 +62,7 @@ export function SignUpForm() {
                   id="last-name"
                   placeholder="Robinson"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -52,14 +74,34 @@ export function SignUpForm() {
                 type="email"
                 placeholder="m@example.com"
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input name="password" id="password" type="password" />
+              <Input 
+                name="password" 
+                id="password" 
+                type="password"
+                required
+                disabled={isLoading}
+                minLength={8}
+              />
+              <p className="text-sm text-gray-500">
+                Password must be at least 8 characters long
+              </p>
             </div>
-            <Button formAction={signup} type="submit" className="w-full">
-              Create an account
+            {error && (
+              <div className="text-sm text-red-500">
+                {error}
+              </div>
+            )}
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating account..." : "Create an account"}
             </Button>
           </div>
         </form>

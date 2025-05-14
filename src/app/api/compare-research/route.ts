@@ -17,10 +17,10 @@ export async function GET(request: Request) {
 
     // Get the saved research data
     const { data: savedResearch, error: researchError } = await supabase
-      .from('saved_companies')
-      .select('created_at_research, created_at_deep_research, company_data')
+      .from('saved_research')
+      .select('created_research_at, created_deepresearch_at, research_data')
       .eq('user_id', userId)
-      .eq('company_name', company)
+      .eq('company_name', company.toLowerCase())
       .single()
 
     if (researchError) throw researchError
@@ -29,8 +29,8 @@ export async function GET(request: Request) {
     }
 
     // Get comparison analysis from Perplexity
-    const prompt = `Analyze ${company}'s performance since ${new Date(savedResearch.created_at_research).toLocaleDateString()} to today's date. 
-    If someone invested $${investmentAmount} from ${new Date(savedResearch.created_at_research).toLocaleDateString()} to today's date, what would their investment be worth now? 
+    const prompt = `Analyze ${company}'s performance since ${new Date(savedResearch.created_research_at).toLocaleDateString()} to today's date. 
+    If someone invested $${investmentAmount} from ${new Date(savedResearch.created_research_at).toLocaleDateString()} to today's date, what would their investment be worth now? 
     Explain this in simple terms for someone new to investing.
 
     IMPORTANT: Respond ONLY with a JSON object in this exact format:
@@ -78,8 +78,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ...data,
-      researchDate: savedResearch.created_at_research,
-      deepResearchDate: savedResearch.created_at_deep_research,
+      researchDate: savedResearch.created_research_at,
+      deepResearchDate: savedResearch.created_deepresearch_at,
       investmentAmount: parseFloat(investmentAmount)
     })
   } catch (error) {

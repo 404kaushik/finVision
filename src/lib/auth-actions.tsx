@@ -8,51 +8,75 @@ import { createClient } from "@/utils/supabase/server";
 export async function login(formData: FormData) {
   const supabase = createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   };
 
-  const client = await supabase;
-  const { error } = await client.auth.signInWithPassword(data);
+  try {
+    const client = await supabase;
+    const { error, data: authData } = await client.auth.signInWithPassword(data);
 
-  if (error) {
-    redirect("/error");
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/", "layout");
+    redirect("/dashboard");
+  } catch (error) {
+    // Instead of redirecting to error page, throw error to be handled by form
+    throw error;
   }
-
-  revalidatePath("/", "layout");
-  redirect("/");
 }
 
 export async function signup(formData: FormData) {
   const supabase = createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const firstName = formData.get("first-name") as string;
   const lastName = formData.get("last-name") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  // Validate password strength
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters long");
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error("Please enter a valid email address");
+  }
+
   const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email,
+    password,
     options: {
       data: {
-        full_name: `${firstName + " " + lastName}`,
-        email: formData.get("email") as string,
+        full_name: `${firstName} ${lastName}`,
+        email,
       },
     },
   };
 
-  const client = await supabase;
-  const { error } = await client.auth.signUp(data);
+  try {
+    const client = await supabase;
+    const { error, data: authData } = await client.auth.signUp(data);
 
-  if (error) {
-    redirect("/error");
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Check if email confirmation is required
+    if (authData?.user?.identities?.length === 0) {
+      throw new Error("Email confirmation required. Please check your email.");
+    }
+
+    revalidatePath("/", "layout");
+    redirect("/dashboard");
+  } catch (error) {
+    throw error;
   }
-
-  revalidatePath("/", "layout");
-  redirect("/");
 }
 
 export async function signout() {
