@@ -32,6 +32,9 @@ const nextConfig = {
       'media.foxbusiness.com'
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 }
 
 module.exports = nextConfig

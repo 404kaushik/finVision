@@ -1283,14 +1283,13 @@ export default function BeginnerResearch({ companyName, onClose }: BeginnerResea
           >
             <motion.span
               className="text-6xl"
-              animate={{
-                y: [0, -10, 0],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Number.POSITIVE_INFINITY,
-                repeatType: "reverse",
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1.1 }}
+              transition={{ 
+                duration: 0.5, 
+                type: "spring",
+                repeat: Infinity,
+                repeatType: "reverse"
               }}
             >
               {research.stockSentiment?.emoji}
