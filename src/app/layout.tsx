@@ -5,7 +5,7 @@ import { AuthProvider } from "@/context/AuthContext"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { Toaster } from "sonner"
 import { TutorialProvider } from '@/context/TutorialContext';
-import Tutorial from '@/components/Tutorial';
+// import Tutorial from '@/components/Tutorial';
 import WelcomeModal from '@/components/WelcomeModal';
 import HelpButton from '@/components/HelpButton';
 
@@ -41,7 +41,7 @@ export default function RootLayout({
           <ThemeProvider>
             <TutorialProvider>
               {children}
-              <Tutorial />
+              {/* <Tutorial /> */}
               <WelcomeModal />
               <HelpButton />
             </TutorialProvider>
