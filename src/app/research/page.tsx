@@ -534,7 +534,62 @@ export default function ResearchPage() {
   const [userId, setUserId] = useState<string>("")  
   const [dataSource, setDataSource] = useState<"database" | "api" | null>(null)
   const [showDataSourceBadge, setShowDataSourceBadge] = useState(false)
+  const [lastSearchedCompany, setLastSearchedCompany] = useState<string | null>(null)
 
+  // Add this useEffect to handle loading last searched company
+  useEffect(() => {
+    // If no company in URL, try to load from localStorage
+    if (!companyName) {
+      const savedCompany = localStorage.getItem("lastSearchedCompany")
+      if (savedCompany) {
+        setLastSearchedCompany(savedCompany)
+      }
+    } else {
+      // Save current company to localStorage
+      localStorage.setItem("lastSearchedCompany", companyName)
+      setLastSearchedCompany(null) // Reset this state when we have a URL param
+    }
+  }, [companyName])
+
+  useEffect(() => {
+    const companyToSearch = companyName || lastSearchedCompany
+    if (companyToSearch) {
+      fetchResearch(companyToSearch)
+      // Also generate mock data if we don't have real data yet
+      if (!chartData) {
+        generateMockChartData()
+      }
+      // Try to get company logo
+      setCompanyLogo(`https://logo.clearbit.com/${companyToSearch.toLowerCase().replace(/\s+/g, "")}.com`)
+    }
+  }, [companyName, lastSearchedCompany])
+
+
+  if (!companyName && !lastSearchedCompany) {
+      return (
+        <Layout>
+          <div className="container mx-auto px-4 py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex flex-col items-center justify-center min-h-[50vh] max-w-md mx-auto text-center"
+            >
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
+                <AlertTriangleIcon className="text-yellow-500 h-8 w-8" />
+              </div>
+              <h1 className="text-3xl font-bold mb-4">No company specified</h1>
+              <p className="text-muted-foreground mb-8">
+                Please search for a company to view detailed research and analysis.
+              </p>
+              <Button asChild size="lg" className="rounded-full px-8">
+                <a href="/">Go to Search</a>
+              </Button>
+            </motion.div>
+          </div>
+        </Layout>
+      )
+    }
   
   
   useEffect(() => {
@@ -731,7 +786,7 @@ export default function ResearchPage() {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error("User not logged in");
       
-      // Check if data exists in saved_research - use consistently lowercase company name
+      // Check if data exists in saved_research
       const normalizedCompanyName = companyName.toLowerCase();
       console.log("Checking database for:", normalizedCompanyName);
       
@@ -777,7 +832,6 @@ export default function ResearchPage() {
           setLoadingProgress(100);
           setTimeout(() => setLoading(false), 500);
           
-          // IMPORTANT: Clear the interval and return early
           clearInterval(interval);
           return;
         } catch (e) {
@@ -798,18 +852,28 @@ export default function ResearchPage() {
       // Fetch from Perplexity API
       const data = await getCompanyResearch(companyName);
       setResearchData(data);
-      setDataSource("api"); // Set data source to API
-      setShowDataSourceBadge(true); // Show badge
+      setDataSource("api");
+      setShowDataSourceBadge(true);
       setTimeout(() => setShowDataSourceBadge(false), 5000);
       
-      // Process response
+      // Process response with improved error handling
       try {
+        if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+          throw new Error("Invalid API response format");
+        }
+        
         const content = data.choices[0].message.content;
-        const sanitizedContent = content.replace(/[""]/g, '"')
+        const sanitizedContent = content.replace(/[""]/g, '"');
 
         let parsedData;
         try {
+          // Attempt to parse the JSON response
           parsedData = JSON.parse(sanitizedContent);
+          
+          // Validate required fields
+          if (!parsedData.overview && !parsedData.analysis) {
+            throw new Error("Missing required fields in response data");
+          }
           
           // Add sentiment scores and emojis if they don't exist
           if (parsedData.metrics && parsedData.metrics.length > 0) {
@@ -819,20 +883,20 @@ export default function ResearchPage() {
             }));
           }
         } catch (e) {
+          console.error("Error parsing research data:", e);
+          // Create a fallback structured object instead of displaying raw JSON
           parsedData = {
-            overview: sanitizedContent,
+            overview: `We received data about ${companyName} but encountered an issue formatting it. Here's what we know:`,
             metrics: [],
-            analysis: sanitizedContent,
+            analysis: "The analysis couldn't be properly formatted. Please try refreshing or searching again.",
+            risks: ["Data formatting error"],
+            opportunities: ["Try refreshing the page", "Search for a different company"]
           };
         }
         setResearch(parsedData);
-      } catch (e) {
-        console.error("Error parsing research data:", e);
-        setResearch({
-          overview: "Failed to parse the research data properly. Please try again.",
-          metrics: [],
-          analysis: data.choices[0].message.content,
-        });
+      } catch (err) {
+        console.error("Error processing response:", err);
+        throw new Error("Failed to process the research data properly. Please try again.");
       }
     } catch (err) {
       console.error("Error fetching research:", err);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { TrendingUpIcon, TrendingDownIcon, ExternalLinkIcon } from "lucide-react"
+import { TrendingUpIcon, TrendingDownIcon, ExternalLinkIcon, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getPerformanceEmoji } from "@/lib/stockUtiils"
 
@@ -11,53 +11,116 @@ interface Stock {
   price: number
   change: number
   changePercent: number
+  lastUpdated?: Date
+  error?: boolean
 }
 
+// Popular stock symbols for the ticker
+const popularSymbols = [
+  "AAPL", "MSFT", "GOOGL", "AMD", "TSLA", 
+  "META", "NVDA", "JPM", "V", "DIS"
+]
+
 export function StockTickerHeader() {
-  const [stocks, setStocks] = useState<Stock[]>([
-    { symbol: "AAPL", price: 187.32, change: 1.25, changePercent: 0.67 },
-    { symbol: "MSFT", price: 402.56, change: -1.89, changePercent: -0.47 },
-    { symbol: "GOOGL", price: 142.17, change: 2.34, changePercent: 1.68 },
-    { symbol: "AMZN", price: 178.75, change: 3.21, changePercent: 1.83 },
-    { symbol: "TSLA", price: 175.34, change: -5.67, changePercent: -3.13 },
-    { symbol: "META", price: 474.99, change: 8.45, changePercent: 1.81 },
-    { symbol: "NVDA", price: 824.18, change: 15.32, changePercent: 1.89 },
-    { symbol: "JPM", price: 183.76, change: -0.89, changePercent: -0.48 },
-    { symbol: "V", price: 275.42, change: 1.12, changePercent: 0.41 },
-    { symbol: "WMT", price: 59.87, change: 0.34, changePercent: 0.57 },
-  ])
+  const [stocks, setStocks] = useState<Stock[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch real stock data
   useEffect(() => {
     const fetchStockData = async () => {
       try {
-        // This would be replaced with a real API call in production
-        // const response = await fetch('/api/stocks')
-        // const data = await response.json()
-        // setStocks(data)
-
-        // For now, we'll just simulate price changes
-        setStocks((prevStocks) =>
-          prevStocks.map((stock) => ({
-            ...stock,
-            price: Number((stock.price + (Math.random() * 2 - 1) * 0.1).toFixed(2)),
-            change: Number((stock.change + (Math.random() * 0.4 - 0.2)).toFixed(2)),
-            changePercent: Number((stock.changePercent + (Math.random() * 0.2 - 0.1)).toFixed(2)),
-          })),
-        )
+        setLoading(stocks.length === 0)
+        
+        // Fetch data for each symbol in parallel
+        const stockPromises = popularSymbols.map(async (symbol) => {
+          try {
+            const response = await fetch(`/api/stock-quote?symbol=${encodeURIComponent(symbol)}`)
+            
+            if (!response.ok) {
+              return createErrorStock(symbol)
+            }
+            
+            const data = await response.json()
+            
+            if (data.error) {
+              return createErrorStock(symbol)
+            }
+            
+            return {
+              symbol,
+              price: data.quote?.c || 0,
+              change: data.quote?.d || 0,
+              changePercent: data.quote?.dp || 0,
+              lastUpdated: new Date(),
+              error: false
+            }
+          } catch (err) {
+            console.error(`Error fetching data for ${symbol}:`, err)
+            return createErrorStock(symbol)
+          }
+        })
+        
+        const newStocks = await Promise.all(stockPromises)
+        
+        if (newStocks.some(stock => !stock.error)) {
+          setStocks(newStocks)
+          setError(null)
+        } else {
+          setError("Unable to fetch stock data")
+        }
       } catch (error) {
         console.error("Error fetching stock data:", error)
+        setError("Failed to load stock data")
+      } finally {
+        setLoading(false)
       }
     }
 
-    // Update every minute
-    const interval = setInterval(fetchStockData, 60000)
+    // Helper to create error stock objects
+    const createErrorStock = (symbol: string): Stock => ({
+      symbol,
+      price: 0,
+      change: 0,
+      changePercent: 0,
+      error: true
+    })
 
     // Initial fetch
     fetchStockData()
-
+    
+    // Update every 15 minutes to respect API limits and use cached data
+    const interval = setInterval(fetchStockData, 15 * 60 * 1000)
+    
     return () => clearInterval(interval)
   }, [])
+
+  // If we're still loading initial data and have no stocks to show
+  if (loading && stocks.length === 0) {
+    return (
+      <div className="w-full bg-background/80 backdrop-blur-sm border-b z-50 overflow-hidden">
+        <div className="max-w-full py-2 px-4">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <span className="text-sm text-muted-foreground">Loading market data...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // If there's an error and we have no stocks to display
+  if (error && stocks.length === 0) {
+    return (
+      <div className="w-full bg-background/80 backdrop-blur-sm border-b z-50 overflow-hidden">
+        <div className="max-w-full py-2 px-4">
+          <div className="flex items-center justify-center">
+            <span className="text-sm text-muted-foreground">{error}</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full bg-background/80 backdrop-blur-sm border-b z-50 overflow-hidden">
@@ -81,25 +144,31 @@ export function StockTickerHeader() {
                 <div key={`${stock.symbol}-${index}`} className="flex items-center mx-6">
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold">{stock.symbol}</span>
-                    <span className="text-sm font-medium">${stock.price.toFixed(2)}</span>
-                    <span className="text-lg" title={`${stock.changePercent > 0 ? "Positive" : "Negative"} change`}>
-                      {getPerformanceEmoji(stock.changePercent)}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-xs flex items-center gap-0.5",
-                        stock.change > 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500",
-                      )}
-                    >
-                      {stock.change > 0 ? (
-                        <TrendingUpIcon className="h-3 w-3" />
-                      ) : (
-                        <TrendingDownIcon className="h-3 w-3" />
-                      )}
-                      {stock.change > 0 ? "+" : ""}
-                      {stock.change.toFixed(2)} ({stock.change > 0 ? "+" : ""}
-                      {stock.changePercent.toFixed(2)}%)
-                    </span>
+                    {stock.error ? (
+                      <span className="text-xs text-muted-foreground">Data unavailable</span>
+                    ) : (
+                      <>
+                        <span className="text-sm font-medium">${stock.price.toFixed(2)}</span>
+                        <span className="text-lg" title={`${stock.changePercent > 0 ? "Positive" : "Negative"} change`}>
+                          {getPerformanceEmoji(stock.changePercent)}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs flex items-center gap-0.5",
+                            stock.change > 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500",
+                          )}
+                        >
+                          {stock.change > 0 ? (
+                            <TrendingUpIcon className="h-3 w-3" />
+                          ) : (
+                            <TrendingDownIcon className="h-3 w-3" />
+                          )}
+                          {stock.change > 0 ? "+" : ""}
+                          {stock.change.toFixed(2)} ({stock.change > 0 ? "+" : ""}
+                          {stock.changePercent.toFixed(2)}%)
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
