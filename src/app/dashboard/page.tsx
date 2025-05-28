@@ -62,9 +62,8 @@ export default function Dashboard() {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null)
   const [companyLogos, setCompanyLogos] = useState<{[key: string]: string}>({})
 
-  // Helper function to extract domain from company name for logo
-  const getCompanyDomain = (companyName: string): string => {
-    // Remove common business entity types and clean up for domain extraction
+  
+  const getCompanyDomain = (companyName: string): string => {    
     const cleanName = companyName
       .toLowerCase()
       .replace(/inc\.?$|corp\.?$|corporation$|ltd\.?$|limited$|llc$/, '')
@@ -91,7 +90,7 @@ export default function Dashboard() {
     fetchMarketData()
     fetchUserData()
     
-    // Set up auto-refresh every 60 seconds
+    // auto-refresh every 60 seconds
     const interval = setInterval(fetchMarketData, 60000)
     return () => clearInterval(interval)
   }, [])
@@ -111,7 +110,7 @@ export default function Dashboard() {
     }
   }, [searches, savedCompanies, achievements])
 
-  // Load company logos for saved companies
+  // Load company logos 
   useEffect(() => {
     if (savedCompanies.length > 0) {
       const logos: {[key: string]: string} = {}
@@ -122,7 +121,6 @@ export default function Dashboard() {
     }
   }, [savedCompanies])
 
-  // Load company logos for search history
   useEffect(() => {
     if (searches.length > 0) {
       const logos: {[key: string]: string} = { ...companyLogos }

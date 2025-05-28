@@ -1,12 +1,14 @@
-// app/api/crypto/all/route.ts
+// app/api/crypto/search/route.ts
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search') || ''
-    const limit = parseInt(searchParams.get('limit') || '100')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const query = searchParams.get('q') || ''
+
+    if (!query) {
+      return NextResponse.json({ error: "Search query is required" }, { status: 400 })
+    }
 
     const API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY
 
@@ -26,19 +28,23 @@ export async function GET(request: Request) {
 
       const symbolsData = await symbolsRes.json()
       
-      // Filter symbols that end with USDT and match search criteria
-      let filteredSymbols = symbolsData
-        .filter((crypto: any) => 
-          crypto.symbol.endsWith('USDT') && 
-          crypto.symbol !== 'USDT' &&
-          (search === '' || 
-           crypto.symbol.toLowerCase().includes(search.toLowerCase()) ||
-           crypto.description.toLowerCase().includes(search.toLowerCase()))
-        )
-        .slice(offset, offset + limit)
+      // Filter symbols based on search query
+      const searchResults = symbolsData
+        .filter((crypto: any) => {
+          const symbol = crypto.symbol.replace('USDT', '').toLowerCase()
+          const description = crypto.description.toLowerCase()
+          const searchTerm = query.toLowerCase()
+          
+          return crypto.symbol.endsWith('USDT') && 
+                 crypto.symbol !== 'USDT' &&
+                 (symbol.includes(searchTerm) || 
+                  description.includes(searchTerm) ||
+                  symbol.startsWith(searchTerm))
+        })
+        .slice(0, 20) // Limit to 20 results
 
-      // Get current prices for filtered symbols
-      const cryptoPromises = filteredSymbols.map(async (crypto: any) => {
+      // Get current prices for search results
+      const cryptoPromises = searchResults.map(async (crypto: any) => {
         const quoteUrl = `https://finnhub.io/api/v1/quote?symbol=BINANCE:${crypto.symbol}&token=${API_KEY}`
         
         try {
@@ -73,37 +79,44 @@ export async function GET(request: Request) {
 
       const results = await Promise.allSettled(cryptoPromises)
       
-      // Filter successful results and sort by market cap
+      // Filter successful results
       const cryptoData = results
         .filter((result): result is PromiseFulfilledResult<any> => 
           result.status === "fulfilled" && result.value !== null
         )
         .map((result) => result.value)
         .sort((a, b) => {
-          // Sort by price * volume as proxy for market activity
-          const aValue = (a.price || 0) * parseFloat(a.volume.replace(/[$BKM]/g, ''))
-          const bValue = (b.price || 0) * parseFloat(b.volume.replace(/[$BKM]/g, ''))
-          return bValue - aValue
+          // Sort by relevance - exact matches first, then alphabetical
+          const aSymbol = a.symbol.toLowerCase()
+          const bSymbol = b.symbol.toLowerCase()
+          const searchTerm = query.toLowerCase()
+          
+          if (aSymbol === searchTerm) return -1
+          if (bSymbol === searchTerm) return 1
+          if (aSymbol.startsWith(searchTerm) && !bSymbol.startsWith(searchTerm)) return -1
+          if (bSymbol.startsWith(searchTerm) && !aSymbol.startsWith(searchTerm)) return 1
+          
+          return aSymbol.localeCompare(bSymbol)
         })
 
       return NextResponse.json({ 
-        cryptoData,
-        hasMore: filteredSymbols.length === limit,
-        total: symbolsData.filter((crypto: any) => crypto.symbol.endsWith('USDT')).length
+        query,
+        results: cryptoData,
+        count: cryptoData.length
       })
 
     } catch (error) {
-      console.error("Error fetching crypto symbols:", error)
-      return NextResponse.json({ error: "Failed to fetch crypto symbols" }, { status: 500 })
+      console.error("Error searching crypto symbols:", error)
+      return NextResponse.json({ error: "Failed to search cryptocurrencies" }, { status: 500 })
     }
 
   } catch (error) {
-    console.error("Error in crypto all API route:", error)
-    return NextResponse.json({ error: "Failed to fetch cryptocurrency data" }, { status: 500 })
+    console.error("Error in crypto search API route:", error)
+    return NextResponse.json({ error: "Failed to search cryptocurrencies" }, { status: 500 })
   }
 }
 
-// Helper functions
+// Helper functions (same as in the all route)
 function getCryptoName(symbol: string): string {
   const names: { [key: string]: string } = {
     BTC: "Bitcoin",

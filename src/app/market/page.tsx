@@ -243,31 +243,31 @@ export default function MarketPage() {
   }
 
   const fetchMarketData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch("/api/market-data")
+      const response = await fetch("/api/market-data");
 
       if (!response.ok) {
-        throw new Error("Failed to fetch market data")
+        throw new Error("Failed to fetch market data");
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       // Process stocks data
       const stocksWithEmojis = data.stocks.map((stock: any) => ({
         ...stock,
         emoji: getPerformanceEmoji(stock.changePercent),
         logo: getCompanyLogo(stock.symbol),
-      }))
+      }));
 
-      setMarketData(stocksWithEmojis)
-      setIndices(data.indices)
-      setLastUpdated(new Date())
+      setMarketData(stocksWithEmojis);
+      setIndices(data.indices);
+      setLastUpdated(new Date());
 
       // Create chart data
-      const labels = stocksWithEmojis.map((item: MarketData) => item.symbol)
-      const prices = stocksWithEmojis.map((item: MarketData) => item.price)
-      const changes = stocksWithEmojis.map((item: MarketData) => item.changePercent)
+      const labels = stocksWithEmojis.map((item: MarketData) => item.symbol);
+      const prices = stocksWithEmojis.map((item: MarketData) => item.price);
+      const changes = stocksWithEmojis.map((item: MarketData) => item.changePercent);
 
       setChartData({
         labels,
@@ -285,144 +285,21 @@ export default function MarketPage() {
             backgroundColor: "rgba(139, 92, 246, 0.5)",
           },
         ],
-      })
+      });
 
-      setError(null)
+      setError(null);
 
       // Animate refresh button
-      setRefreshAnimation(true)
-      setTimeout(() => setRefreshAnimation(false), 1000)
+      setRefreshAnimation(true);
+      setTimeout(() => setRefreshAnimation(false), 1000);
     } catch (error) {
-      console.error("Error fetching market data:", error)
-      setError("Failed to fetch market data. Using sample data instead.")
-
-      // Use sample data as fallback
-      if (marketData.length === 0) {
-        const mockData = [
-          {
-            symbol: "AAPL",
-            companyName: "Apple Inc.",
-            price: 175.34 + Math.random() * 5,
-            change: 2.45,
-            changePercent: 1.42,
-            volume: "62.3M",
-            domain: "apple.com",
-            marketCap: "2.8T",
-            industry: "Technology",
-          },
-          {
-            symbol: "MSFT",
-            companyName: "Microsoft Corporation",
-            price: 340.67 + Math.random() * 5,
-            change: -1.23,
-            changePercent: -0.36,
-            volume: "28.1M",
-            marketCap: "2.5T",
-            industry: "Technology",
-          },
-          {
-            symbol: "GOOGL",
-            companyName: "Alphabet Inc.",
-            price: 131.86 + Math.random() * 5,
-            change: 0.56,
-            changePercent: 0.43,
-            volume: "15.7M",
-            marketCap: "1.7T",
-            industry: "Technology",
-          },
-          {
-            symbol: "AMZN",
-            companyName: "Amazon.com Inc.",
-            price: 127.74 + Math.random() * 5,
-            change: -0.89,
-            changePercent: -0.69,
-            volume: "32.4M",
-            marketCap: "1.3T",
-            industry: "Consumer Cyclical",
-          },
-          {
-            symbol: "META",
-            companyName: "Meta Platforms Inc.",
-            price: 301.41 + Math.random() * 5,
-            change: 4.12,
-            changePercent: 1.38,
-            volume: "18.9M",
-            marketCap: "780B",
-            industry: "Technology",
-          },
-          {
-            symbol: "TSLA",
-            companyName: "Tesla Inc.",
-            price: 248.48 + Math.random() * 5,
-            change: -3.56,
-            changePercent: -1.41,
-            volume: "45.2M",
-            marketCap: "790B",
-            industry: "Automotive",
-          },
-          {
-            symbol: "NVDA",
-            companyName: "NVIDIA Corporation",
-            price: 437.53 + Math.random() * 5,
-            change: 7.89,
-            changePercent: 1.83,
-            volume: "38.6M",
-            marketCap: "1.1T",
-            industry: "Technology",
-          },
-          {
-            symbol: "JPM",
-            companyName: "JPMorgan Chase & Co.",
-            price: 146.77 + Math.random() * 5,
-            change: 0.34,
-            changePercent: 0.23,
-            volume: "9.8M",
-            marketCap: "430B",
-            industry: "Financial Services",
-          },
-        ]
-
-        // Add emojis and logos based on performance
-        const dataWithEmojis = mockData.map((stock) => ({
-          ...stock,
-          emoji: getPerformanceEmoji(stock.changePercent),
-          logo: getCompanyLogo(stock.symbol),
-        }))
-
-        setMarketData(
-          dataWithEmojis.map((stock) => ({
-            ...stock,
-            companyName: stock.companyName || stock.symbol, // Provide fallback for missing companyName
-          })),
-        )
-
-        // Create chart data from sample data
-        const labels = dataWithEmojis.map((item) => item.symbol)
-        const prices = dataWithEmojis.map((item) => item.price)
-        const changes = dataWithEmojis.map((item) => item.changePercent)
-
-        setChartData({
-          labels,
-          datasets: [
-            {
-              label: "Price",
-              data: prices,
-              borderColor: "rgba(59, 130, 246, 1)",
-              backgroundColor: "rgba(59, 130, 246, 0.5)",
-            },
-            {
-              label: "Change %",
-              data: changes,
-              borderColor: "rgba(139, 92, 246, 1)",
-              backgroundColor: "rgba(139, 92, 246, 0.5)",
-            },
-          ],
-        })
-      }
+      console.error("Error fetching market data:", error);
+      setError("Failed to fetch market data. Please try again later.");
+      setLoading(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const API_KEY = "pk_b3x22PoMT9C74oqX7C9sgg"
 
@@ -490,17 +367,7 @@ export default function MarketPage() {
               <Button onClick={fetchMarketData} className="gap-2" disabled={loading}>
                 <RefreshCwIcon className={cn("h-4 w-4", refreshAnimation ? "animate-spin" : "")} />
                 <span className="hidden sm:inline-block">{loading ? "Refreshing..." : "Refresh"}</span>
-              </Button>
-              <Button
-                onClick={() => fetchStockInsights(marketData)}
-                variant="outline"
-                size="sm"
-                className="gap-2 ml-2"
-                disabled={marketData.length === 0}
-              >
-                <RefreshCwIcon className="h-4 w-4" />
-                <span className="hidden sm:inline-block">Refresh Insights</span>
-              </Button>
+              </Button>              
             </div>
           </div>
 
@@ -633,54 +500,6 @@ export default function MarketPage() {
               {error}
             </motion.div>
           )}
-
-          {/* Market Indices */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            {loading && indices.length === 0
-              ? Array(4)
-                  .fill(0)
-                  .map((_, i) => (
-                    <Card key={i} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <Skeleton className="h-5 w-24 mb-2" />
-                        <Skeleton className="h-8 w-20 mb-2" />
-                        <Skeleton className="h-4 w-16" />
-                      </CardContent>
-                    </Card>
-                  ))
-              : indices.map((index) => (
-                  <Card key={index.symbol} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-medium text-sm">{index.name}</h3>
-                        <span className="text-lg">{getPerformanceEmoji(index.changePercent)}</span>
-                      </div>
-                      <p className="text-2xl font-bold">{index.price.toLocaleString()}</p>
-                      <p
-                        className={cn(
-                          "flex items-center text-sm",
-                          index.changePercent >= 0
-                            ? "text-green-600 dark:text-green-500"
-                            : "text-red-600 dark:text-red-500",
-                        )}
-                      >
-                        {index.changePercent >= 0 ? (
-                          <TrendingUpIcon className="h-3 w-3 mr-1" />
-                        ) : (
-                          <TrendingDownIcon className="h-3 w-3 mr-1" />
-                        )}
-                        {index.changePercent >= 0 ? "+" : ""}
-                        {index.changePercent.toFixed(2)}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-          </motion.div>
 
           {lastUpdated && (
             <motion.div

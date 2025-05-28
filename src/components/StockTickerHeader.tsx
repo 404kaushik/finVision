@@ -15,6 +15,20 @@ interface Stock {
   error?: boolean
 }
 
+// 1. Mapping from symbol to company info
+const companyInfo: Record<string, { name: string; emoji: string }> = {
+  AAPL: { name: "Apple Inc.",      emoji: "🍎" },
+  MSFT: { name: "Microsoft Corp.", emoji: "🖥️" },
+  GOOGL:{ name: "Alphabet Inc.",   emoji: "🔍" },
+  AMD:  { name: "AMD",             emoji: "🧩" },
+  TSLA: { name: "Tesla, Inc.",     emoji: "🚗" },
+  META: { name: "Meta Platforms",  emoji: "📘" },
+  NVDA: { name: "NVIDIA Corp.",    emoji: "🎮" },
+  JPM:  { name: "JPMorgan Chase",   emoji: "💰" },
+  V:    { name: "Visa Inc.",        emoji: "💳" },
+  DIS:  { name: "Disney",          emoji: "🎬" },
+}
+
 // Popular stock symbols for the ticker
 const popularSymbols = [
   "AAPL", "MSFT", "GOOGL", "AMD", "TSLA", 
@@ -26,27 +40,25 @@ export function StockTickerHeader() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch real stock data
   useEffect(() => {
+    const createErrorStock = (symbol: string): Stock => ({
+      symbol,
+      price: 0,
+      change: 0,
+      changePercent: 0,
+      error: true
+    })
+
     const fetchStockData = async () => {
       try {
         setLoading(stocks.length === 0)
-        
-        // Fetch data for each symbol in parallel
+
         const stockPromises = popularSymbols.map(async (symbol) => {
           try {
             const response = await fetch(`/api/stock-quote?symbol=${encodeURIComponent(symbol)}`)
-            
-            if (!response.ok) {
-              return createErrorStock(symbol)
-            }
-            
+            if (!response.ok) return createErrorStock(symbol)
             const data = await response.json()
-            
-            if (data.error) {
-              return createErrorStock(symbol)
-            }
-            
+            if (data.error) return createErrorStock(symbol)
             return {
               symbol,
               price: data.quote?.c || 0,
@@ -60,42 +72,27 @@ export function StockTickerHeader() {
             return createErrorStock(symbol)
           }
         })
-        
+
         const newStocks = await Promise.all(stockPromises)
-        
         if (newStocks.some(stock => !stock.error)) {
           setStocks(newStocks)
           setError(null)
         } else {
           setError("Unable to fetch stock data")
         }
-      } catch (error) {
-        console.error("Error fetching stock data:", error)
+      } catch (err) {
+        console.error("Error fetching stock data:", err)
         setError("Failed to load stock data")
       } finally {
         setLoading(false)
       }
     }
 
-    // Helper to create error stock objects
-    const createErrorStock = (symbol: string): Stock => ({
-      symbol,
-      price: 0,
-      change: 0,
-      changePercent: 0,
-      error: true
-    })
-
-    // Initial fetch
     fetchStockData()
-    
-    // Update every 15 minutes to respect API limits and use cached data
     const interval = setInterval(fetchStockData, 15 * 60 * 1000)
-    
     return () => clearInterval(interval)
   }, [])
 
-  // If we're still loading initial data and have no stocks to show
   if (loading && stocks.length === 0) {
     return (
       <div className="w-full bg-background/80 backdrop-blur-sm border-b z-50 overflow-hidden">
@@ -109,7 +106,6 @@ export function StockTickerHeader() {
     )
   }
 
-  // If there's an error and we have no stocks to display
   if (error && stocks.length === 0) {
     return (
       <div className="w-full bg-background/80 backdrop-blur-sm border-b z-50 overflow-hidden">
@@ -129,49 +125,59 @@ export function StockTickerHeader() {
           <div className="flex-1 overflow-hidden">
             <motion.div
               animate={{ x: "-100%" }}
-              transition={{
-                x: {
-                  duration: 50,
-                  repeat: Number.POSITIVE_INFINITY,
-                  repeatType: "loop",
-                  ease: "linear",
-                },
-              }}
+              transition={{ x: { duration: 50, repeat: Infinity, ease: "linear" } }}
               className="flex whitespace-nowrap"
             >
-              {/* Duplicate the stocks to create a seamless loop */}
-              {[...stocks, ...stocks].map((stock, index) => (
-                <div key={`${stock.symbol}-${index}`} className="flex items-center mx-6">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold">{stock.symbol}</span>
-                    {stock.error ? (
-                      <span className="text-xs text-muted-foreground">Data unavailable</span>
-                    ) : (
-                      <>
-                        <span className="text-sm font-medium">${stock.price.toFixed(2)}</span>
-                        <span className="text-lg" title={`${stock.changePercent > 0 ? "Positive" : "Negative"} change`}>
-                          {getPerformanceEmoji(stock.changePercent)}
-                        </span>
-                        <span
-                          className={cn(
-                            "text-xs flex items-center gap-0.5",
-                            stock.change > 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500",
-                          )}
-                        >
-                          {stock.change > 0 ? (
-                            <TrendingUpIcon className="h-3 w-3" />
-                          ) : (
-                            <TrendingDownIcon className="h-3 w-3" />
-                          )}
-                          {stock.change > 0 ? "+" : ""}
-                          {stock.change.toFixed(2)} ({stock.change > 0 ? "+" : ""}
-                          {stock.changePercent.toFixed(2)}%)
-                        </span>
-                      </>
-                    )}
+              {[...stocks, ...stocks].map((stock, index) => {
+                const info = companyInfo[stock.symbol] || { name: stock.symbol, emoji: "" }
+                return (
+                  <div
+                    key={`${stock.symbol}-${index}`}
+                    className="relative group flex items-center mx-6 overflow-visible"
+                  >
+                    {/* Ticker content */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold">{stock.symbol}</span>
+                      {stock.error ? (
+                        <span className="text-xs text-muted-foreground">Data unavailable</span>
+                      ) : (
+                        <>
+                          <span className="text-sm font-medium">${stock.price.toFixed(2)}</span>
+                          <span className="text-lg" title={`${stock.changePercent > 0 ? "Positive" : "Negative"} change`}>
+                            {getPerformanceEmoji(stock.changePercent)}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-xs flex items-center gap-0.5",
+                              stock.change > 0
+                                ? "text-green-600 dark:text-green-500"
+                                : "text-red-600 dark:text-red-500"
+                            )}
+                          >
+                            {stock.change > 0 ? <TrendingUpIcon className="h-3 w-3" /> : <TrendingDownIcon className="h-3 w-3" />}
+                            {stock.change > 0 ? "+" : ""}{stock.change.toFixed(2)} ({stock.change > 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%)
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Hover tooltip */}
+                    <div className="
+                        absolute z-50 bottom-full left-1/2
+                        transform -translate-x-1/2 mb-2
+                        px-2 py-1 rounded
+                        bg-gray-800 text-white text-xs
+                        whitespace-nowrap
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity
+                        pointer-events-none
+                      "
+                    >
+                      {info.emoji} {info.name}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </motion.div>
           </div>
           <div className="ml-4 shrink-0">
@@ -179,7 +185,7 @@ export function StockTickerHeader() {
               href="/market"
               className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <span className="">View All</span>
+              <span>View All</span>
               <ExternalLinkIcon className="h-3 w-3" />
             </a>
           </div>

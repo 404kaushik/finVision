@@ -4,10 +4,6 @@ import { Inter, Poppins } from "next/font/google"
 import { AuthProvider } from "@/context/AuthContext"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { Toaster } from "sonner"
-import { TutorialProvider } from '@/context/TutorialContext';
-// import Tutorial from '@/components/Tutorial';
-import WelcomeModal from '@/components/WelcomeModal';
-import HelpButton from '@/components/HelpButton';
 
 // Use Poppins as the main font
 const poppins = Poppins({
@@ -39,12 +35,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <ThemeProvider>
-            <TutorialProvider>
-              {children}
-              {/* <Tutorial /> */}
-              <WelcomeModal />
-              <HelpButton />
-            </TutorialProvider>
+              {children}                                          
             <Toaster />
           </ThemeProvider>
         </AuthProvider>

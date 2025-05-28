@@ -471,8 +471,8 @@ export default function InvestmentAssistant({ initiallyOpen = false }: { initial
                   <div className="flex-1 overflow-y-auto p-4">
                     {/* Chat mode */}
                     {mode === "chat" && (
-                      <div className="h-full flex flex-col">
-                        <div className="flex-1 overflow-y-auto mb-4 px-2">
+                      <div className="h-[450px] flex flex-col">
+                        <div className="flex-1 overflow-y-scroll mb-4 px-2">
                           {conversation.map((msg, index) => (
                             <motion.div
                               key={index}

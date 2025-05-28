@@ -23,8 +23,7 @@ export async function login(formData: FormData) {
 
     revalidatePath("/", "layout");
     redirect("/dashboard");
-  } catch (error) {
-    // Instead of redirecting to error page, throw error to be handled by form
+  } catch (error) {    
     throw error;
   }
 }

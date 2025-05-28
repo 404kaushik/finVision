@@ -16,19 +16,6 @@ type Stock = {
   change?: number
 }
 
-// Sample stock data (fallback data if API fails)
-const sampleStocks: Stock[] = [
-  { symbol: "AAPL", companyName: "Apple Inc.", price: 182.52, changePercent: 1.25, change: 2.25 },
-  { symbol: "MSFT", companyName: "Microsoft Corp.", price: 337.94, changePercent: 0.87, change: 2.91 },
-  { symbol: "GOOGL", companyName: "Alphabet Inc.", price: 131.86, changePercent: 1.42, change: 1.85 },
-  { symbol: "AMZN", companyName: "Amazon.com Inc.", price: 127.74, changePercent: 0.95, change: 1.2 },
-  { symbol: "NVDA", companyName: "NVIDIA Corp.", price: 416.1, changePercent: 2.35, change: 9.56 },
-  { symbol: "META", companyName: "Meta Platforms Inc.", price: 297.74, changePercent: 1.15, change: 3.38 },
-  { symbol: "TSLA", companyName: "Tesla Inc.", price: 237.49, changePercent: -0.75, change: -1.8 },
-  { symbol: "BRK.A", companyName: "Berkshire Hathaway", price: 528450, changePercent: 0.32, change: 1680 },
-  { symbol: "JPM", companyName: "JPMorgan Chase & Co.", price: 146.43, changePercent: 0.65, change: 0.94 },
-  { symbol: "V", companyName: "Visa Inc.", price: 235.44, changePercent: 0.48, change: 1.12 },
-]
 
 // Popular stock symbols to fetch from Finnhub
 const popularSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "JPM", "V", "WMT", "DIS", "KO", "PEP"]
@@ -101,13 +88,10 @@ export function StockCarousel({ title, description, filter }: StockCarouselProps
         } else {
           // Fall back to sample data if no stocks were successfully fetched
           console.warn("No stocks fetched from API, using sample data")
-          setStocks(sampleStocks)
         }
       } catch (err) {
         console.error("Error fetching stocks:", err)
         setError("Failed to load stock data")
-        // Use sample data as fallback
-        setStocks(sampleStocks)
       } finally {
         setLoading(false)
       }

@@ -9,7 +9,6 @@ import { motion } from "framer-motion"
 import { ClockIcon, LightbulbIcon, BarChart2Icon, ArrowRightIcon, ChevronDownIcon, SearchIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StockCarousel } from "@/components/StockCarousel"
-
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +48,7 @@ export default function Home() {
     <>
       {/* <StockTickerHeader /> */}
       <Layout>
-        <div className="relative z-10">
+        <div className="welcome-step relative z-10">
           {/* Hero Section */}
           <section 
             className="flex flex-col items-center justify-center min-h-[90vh] text-center px-4 py-16 relative overflow-hidden"

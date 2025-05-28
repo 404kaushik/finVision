@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -9,6 +8,7 @@ import { useInView } from "react-intersection-observer"
 import Layout from "@/components/Layout"
 import { getCompanyResearch } from "@/lib/perplexity"
 import { supabase } from "@/utils/supabase/client"
+import { StockChart } from "@/components/ui/stock-chart"
 import CompanyChart from "@/components/CompanyChart"
 import {
   Loader2Icon,
@@ -58,6 +58,7 @@ import { cn } from "@/lib/utils"
 import DeepResearch from "@/components/BeginnerResearch"
 import DeepResearchSkeleton from "@/components/DeepResearchSkeleton"
 import ResearchComparison from "@/components/ResearchComparison"
+import SectionHelpChat from "@/components/SectionHelpChat"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 // Helper function to get sentiment emoji
 const getSentimentEmoji = (sentiment: number): string => {
@@ -363,10 +364,27 @@ function FinancialsTab({ financialData, loading, chartData }: { financialData: a
               <BarChart2Icon className="h-5 w-5 text-primary" />
               Stock Price History
             </CardTitle>
+            <CardDescription>
+              {financialData?.stockPrices?.length > 0 
+                ? `Last ${financialData.stockPrices.length} days of trading data` 
+                : "Historical price data"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="p-4 h-[300px]">
-              <CompanyChart data={chartData} title="Stock Price History" />
+            <div className="p-4">
+              {chartData ? (
+                <StockChart 
+                  data={chartData} 
+                  title="Stock Price History" 
+                  trend={parseFloat(String(financialData?.marketData?.['Change %']).replace(/[^0-9.-]+/g, '')) > 0 ? 'up' : 'down'}
+                  value={financialData?.marketData?.['Current Price']}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
+                  <AlertTriangleIcon className="h-10 w-10 mb-4 text-amber-500" />
+                  <p>No historical price data available</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -535,6 +553,29 @@ export default function ResearchPage() {
   const [dataSource, setDataSource] = useState<"database" | "api" | null>(null)
   const [showDataSourceBadge, setShowDataSourceBadge] = useState(false)
   const [lastSearchedCompany, setLastSearchedCompany] = useState<string | null>(null)
+  const [chatResponses, setChatResponses] = useState<Record<string, Array<{question: string, answer: string}>>>({});
+
+  // Add this handler function
+  const handleNewResponse = (sectionTitle: string, question: string, answer: string) => {
+    setChatResponses((prev) => {
+      const updated = { ...prev };
+      if (!updated[sectionTitle]) {
+        updated[sectionTitle] = [];
+      }
+      
+      const existingIndex = updated[sectionTitle].findIndex(
+        item => item.question.toLowerCase() === question.toLowerCase()
+      );
+      
+      if (existingIndex >= 0) {
+        updated[sectionTitle][existingIndex].answer = answer;
+      } else {
+        updated[sectionTitle].push({ question, answer });
+      }
+      
+      return updated;
+    });
+  };
 
   // Add this useEffect to handle loading last searched company
   useEffect(() => {
@@ -557,7 +598,7 @@ export default function ResearchPage() {
       fetchResearch(companyToSearch)
       // Also generate mock data if we don't have real data yet
       if (!chartData) {
-        generateMockChartData()
+        
       }
       // Try to get company logo
       setCompanyLogo(`https://logo.clearbit.com/${companyToSearch.toLowerCase().replace(/\s+/g, "")}.com`)
@@ -621,48 +662,71 @@ export default function ResearchPage() {
   // Add this function to fetch financial data
   const fetchFinancialData = async (company: string) => {
     if (!company) return
-
+    
     setFinancialLoading(true)
     setFinancialError(null)
-
+  
     try {
       // Fetch financial data from Finnhub API
       const response = await fetch(`/api/financials?company=${encodeURIComponent(company)}`)
-
+  
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.details || "Failed to fetch financial data")
       }
-
+  
       const data = await response.json()
       
       // Validate the response data
       if (!data || !data.marketData || !data.ratios) {
         throw new Error("Invalid data format received from API")
       }
-
+  
       setFinancialData(data)
-
-      // Also update chart data with real stock price data if available
+  
+      // Update chart data with real stock price data
       if (data.stockPrices && data.stockPrices.length > 0) {
-        const chartLabels = data.stockPrices.map((item: any) => new Date(item.date).toLocaleDateString())
+        // Format dates from ISO strings to readable format
+        const chartLabels = data.stockPrices.map((item: any) => {
+          const date = new Date(item.date)
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric'
+          })
+        })
+  
+        const prices = data.stockPrices.map((item: any) => item.close)
+        const firstPrice = prices[0]
+        const lastPrice = prices[prices.length - 1]
+        const percentChange = ((lastPrice - firstPrice) / firstPrice) * 100
+  
         const chartData = {
           labels: chartLabels,
           datasets: [
             {
-              label: "Stock Price",
-              data: data.stockPrices.map((item: any) => item.close),
-              borderColor: "rgba(59, 130, 246, 1)",
+              label: `${data.symbol} Stock Price`,
+              data: prices,
+              borderColor: percentChange >= 0 ? "hsl(142.1 76.2% 36.3%)" : "hsl(346.8 77.2% 49.8%)",
+              backgroundColor: percentChange >= 0 ? "hsla(142.1 76.2% 36.3% / 0.1)" : "hsla(346.8 77.2% 49.8% / 0.1)",
               borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.3,
+              fill: true
             },
           ],
         }
-
+  
         setChartData(chartData)
+        
+      } else {
+        setChartData(null)
+        console.warn("No stock price data available for charting")
       }
+      
     } catch (error: any) {
       console.error("Error fetching financial data:", error)
       setFinancialError(error.message || "Failed to load financial data. Please try again.")
+      setChartData(null)            
     } finally {
       setFinancialLoading(false)
     }
@@ -703,9 +767,10 @@ export default function ResearchPage() {
   useEffect(() => {
     if (companyName) {
       fetchResearch(companyName)
+      fetchFinancialData(companyName)
       // Only generate mock data if we don't have real data yet
       if (!chartData) {
-        generateMockChartData()
+        
       }
 
       // Try to get company logo
@@ -736,30 +801,7 @@ export default function ResearchPage() {
 
       return () => clearInterval(interval)
     }
-  }, [loading, loadingProgress])
-
-  const generateMockChartData = () => {
-    // Generate mock stock price data
-    const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    const data = {
-      labels,
-      datasets: [
-        {
-          label: "Stock Price",
-          data: Array.from({ length: 12 }, () => Math.floor(Math.random() * 100) + 50),
-          borderColor: "rgba(59, 130, 246, 1)",
-          borderWidth: 2,
-        },
-        {
-          label: "Industry Average",
-          data: Array.from({ length: 12 }, () => Math.floor(Math.random() * 100) + 30),
-          borderColor: "rgba(139, 92, 246, 1)",
-          borderWidth: 2,
-        },
-      ],
-    }
-    setChartData(data)
-  }
+  }, [loading, loadingProgress])  
 
   const fetchResearch = async (companyName: string) => {
     if (!companyName) return;
@@ -784,7 +826,14 @@ export default function ResearchPage() {
     try {
       // Get current user
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error("User not logged in");
+      if (authError || !user) {
+        // User-friendly message instead of throwing an error
+        setError("Please sign in to continue with your research");
+        clearInterval(interval);
+        setLoadingProgress(100);
+        setTimeout(() => setLoading(false), 500);
+        return;
+      }
       
       // Check if data exists in saved_research
       const normalizedCompanyName = companyName.toLowerCase();
@@ -863,12 +912,16 @@ export default function ResearchPage() {
         }
         
         const content = data.choices[0].message.content;
-        const sanitizedContent = content.replace(/[""]/g, '"');
+        // Remove markdown code block formatting before parsing
+        const cleanedContent = content
+          .replace(/```json\s*/, '') // Remove opening ```json tag
+          .replace(/```\s*$/, '')     // Remove closing ``` tag
+          .replace(/[""]/g, '"');     // Replace smart quotes
 
         let parsedData;
         try {
           // Attempt to parse the JSON response
-          parsedData = JSON.parse(sanitizedContent);
+          parsedData = JSON.parse(cleanedContent);
           
           // Validate required fields
           if (!parsedData.overview && !parsedData.analysis) {
@@ -930,8 +983,11 @@ export default function ResearchPage() {
       if (researchData) {
         try {
           const content = researchData.choices[0].message.content;
-          const sanitizedContent = content.replace(/[""]/g, '"');
-          dataToSave = JSON.parse(sanitizedContent);
+          const cleanedContent = content
+            .replace(/```json\s*/, '') // Remove opening ```json tag
+            .replace(/```\s*$/, '')     // Remove closing ``` tag
+            .replace(/[""]/g, '"');     // Replace smart quotes
+          dataToSave = JSON.parse(cleanedContent);
         } catch (e) {
           console.error("Error parsing API data for saving:", e);
           // Fall back to the current research state
@@ -1079,7 +1135,7 @@ export default function ResearchPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card className="overflow-hidden border">
+                    <Card className="border relative">
                       <CardHeader className="pb-3 bg-muted/30">
                         <CardTitle className="flex items-center gap-2">
                           <FileTextIcon className="h-5 w-5 text-primary" />
@@ -1090,7 +1146,15 @@ export default function ResearchPage() {
                       <CardContent className="p-2">
                         <p className="leading-relaxed text-lg">
                           {research.overview || research.summary || "No overview available"}
-                        </p>
+                        </p>                      
+                        <div className="absolute right-3 -translate-y-4 z-10"> {/* Positioned absolutely */}
+                          <SectionHelpChat
+                            sectionTitle={`What is ${companyName}?`}
+                            sectionContext={research?.overview || ""}
+                            companyName={companyName || ''}
+                            onNewResponse={handleNewResponse}
+                          />
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -1183,6 +1247,14 @@ export default function ResearchPage() {
                                 </p>
                               </motion.div>
                             ))}
+                            <div className="absolute right-15 -translate-y-4 z-10"> {/* Positioned absolutely */}
+                              <SectionHelpChat
+                                sectionTitle={`${companyName} Performance Metrics`}
+                                sectionContext={`Performance metrics for ${companyName} including: ${research.metrics.map((m: any) => m.name).join(', ')}`}
+                                companyName={companyName || ''}
+                                onNewResponse={handleNewResponse}
+                              />
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -1231,7 +1303,7 @@ export default function ResearchPage() {
                             </AccordionItem>
                           )}
                         </Accordion>
-                      </CardContent>
+                      </CardContent>                    
                       </Card>
                     </motion.div>
                   )}
@@ -1307,7 +1379,7 @@ export default function ResearchPage() {
                             <span className="text-green-900 dark:text-green-200">{opportunity}</span>
                           </motion.li>
                         ))}
-                      </ul>
+                      </ul>                      
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1515,27 +1587,7 @@ export default function ResearchPage() {
               </Card>
             </motion.div>
           </div>
-        )
-      case "comparison":
-        return (
-          <div className="space-y-8 mt-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <Card className="overflow-hidden border">
-                <CardHeader className="pb-4 bg-gradient-to-r from-primary/10 to-primary/5 space-y-2">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <GitCompareIcon className="h-5 w-5 text-primary" />
-                      <CardTitle>Investment Comparison</CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ResearchComparison companyName={companyName || ""} userId={userId || ""} />
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        )
+        )      
       default:
         return null
     }
@@ -1598,7 +1650,7 @@ export default function ResearchPage() {
           </DialogContent>
         </Dialog>
 
-        <div className="flex flex-col space-y-8 py-20">
+        <div className="flex flex-col space-y-8 py-4">
           {/* Header Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1906,7 +1958,7 @@ export default function ResearchPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="w-full"
           >
-            <div className="grid w-full grid-cols-5 rounded-xl p-1 bg-muted/30">
+            <div className="grid w-full grid-cols-4 rounded-xl p-1 bg-muted/30">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={cn(
@@ -1955,18 +2007,6 @@ export default function ResearchPage() {
                 <ZapIcon className="h-4 w-4" />
                 <span>Deep Research</span>
               </button>
-              <button
-                onClick={() => setActiveTab("comparison")}
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-all",
-                  activeTab === "comparison"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted/50",
-                )}
-              >
-                <GitCompareIcon className="h-4 w-4" />
-                <span>Comparison</span>
-              </button>
             </div>
           </motion.div>
 
@@ -2013,7 +2053,7 @@ export default function ResearchPage() {
                 <p className="text-xl text-muted-foreground mb-2">
                   Researching {companyName}... {loadingProgress}%
                 </p>
-                <p className="text-sm text-muted-foreground mb-4 text-center">{loadingStage} ✨</p>
+                <p className="text-sm text-muted-foreground mb-4 text-center">{loadingStage} 🔎</p>
                 <Progress value={loadingProgress} className="w-64" />
               </motion.div>
             </div>

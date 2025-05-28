@@ -1314,7 +1314,7 @@ export default function BeginnerResearch({ companyName, onClose }: BeginnerResea
         {/* How it Makes Money (Pie Chart) */}
         {research.howItMakesMoney && (
           <motion.div
-            className="my-8 p-6 bg-card-hover rounded-xl shadow-md border border-primary/10"
+            className="m-8 p-6 bg-card-hover rounded-xl shadow-md border border-primary/10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -1359,7 +1359,7 @@ export default function BeginnerResearch({ companyName, onClose }: BeginnerResea
         {/* Beginner FAQ */}
         {research.beginnerFAQ && (
           <motion.div
-            className="my-8 p-6 bg-card-hover rounded-xl shadow-md border border-primary/10"
+            className="m-8 p-6 bg-card-hover rounded-xl shadow-md border border-primary/10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}

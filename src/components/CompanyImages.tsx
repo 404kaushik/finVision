@@ -6,7 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { motion } from "framer-motion"
 import { ExternalLink, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export default function CompanyImages({ images }: { images: { id: string; url: string; alt: string; link: string }[] }) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -68,6 +68,7 @@ export default function CompanyImages({ images }: { images: { id: string; url: s
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl p-1 border-none bg-transparent">
+                    <DialogTitle className="sr-only">Image Preview</DialogTitle>
                     <AspectRatio ratio={16 / 9}>
                       <img 
                         src={img.url} 

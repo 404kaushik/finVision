@@ -29,7 +29,10 @@ const nextConfig = {
       'si.wsj.net',
       'blogs.wsj.com',
       'a57.foxnews.com',
-      'media.foxbusiness.com'
+      'media.foxbusiness.com',
+      'duckduckgo.com',
+      'external-content.duckduckgo.com',
+      'i.duckduckgo.com',
     ],
   },
   eslint: {

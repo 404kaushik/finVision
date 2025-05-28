@@ -10,8 +10,7 @@ import { RiMentalHealthLine } from "react-icons/ri"
 export default function LearnPage() {
   const [showAssistant, setShowAssistant] = useState(false)
 
-  useEffect(() => {
-    // Show the assistant automatically after 2 seconds
+  useEffect(() => {    
     const timer = setTimeout(() => {
       setShowAssistant(true)
     }, 2000)
@@ -21,7 +20,7 @@ export default function LearnPage() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto py-12">
         <div className="text-center mb-12">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -226,7 +225,7 @@ export default function LearnPage() {
         </motion.div>
       </div>
 
-      {/* Pass the showAssistant state to the component */}
+      {/* showAssistant state */}
       {showAssistant && <InvestmentAssistant initiallyOpen={true} />}
     </Layout>
   )

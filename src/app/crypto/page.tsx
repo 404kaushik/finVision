@@ -14,8 +14,13 @@ import {
   TrendingDownIcon,
   PlusIcon,
   ExternalLinkIcon,
+  LightbulbIcon,
+  BarChart3Icon,
+  X
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -78,6 +83,17 @@ interface CryptoData {
   description?: string
 }
 
+interface CryptoInsight {
+  symbol: string
+  name: string
+  trend: string
+  changePercent: number
+  analysis: string
+  citations: any[]
+  timestamp: string
+  summary: string
+}
+
 export default function CryptoPage() {
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
   const [filteredData, setFilteredData] = useState<CryptoData[]>([])
@@ -88,6 +104,8 @@ export default function CryptoPage() {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoData | null>(null)
   const [showInfoModal, setShowInfoModal] = useState(false)
   const [savedCryptos, setSavedCryptos] = useState<string[]>([])
+  const [cryptoInsight, setCryptoInsight] = useState<CryptoInsight | null>(null)
+  const [insightLoading, setInsightLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
@@ -144,7 +162,6 @@ export default function CryptoPage() {
 
       if (!API_KEY) {
         console.error("Finnhub API key is not defined")
-        generateFallbackData()
         return
       }
 
@@ -214,14 +231,43 @@ export default function CryptoPage() {
         setCryptoData(fetchedCryptos)
         setFilteredData(fetchedCryptos)
       } else {
-        generateFallbackData()
       }
     } catch (error) {
       console.error("Error fetching crypto data:", error)
-      generateFallbackData()
     } finally {
       setLoading(false)
       setTimeout(() => setRefreshing(false), 500)
+    }
+  }
+
+  const fetchCryptoInsights = async (crypto: CryptoData) => {
+    setInsightLoading(true)
+    try {
+      const response = await fetch('/api/crypto/insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          symbol: crypto.symbol,
+          name: crypto.name,
+          changePercent: crypto.changePercent
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch insights')
+      }
+
+      const data = await response.json()
+      setCryptoInsight(data.insights)
+    } catch (error) {
+      console.error('Error fetching crypto insights:', error)
+      toast.error('Failed to load insights', {
+        description: 'Could not retrieve market analysis at this time'
+      })
+    } finally {
+      setInsightLoading(false)
     }
   }
 
@@ -317,122 +363,6 @@ export default function CryptoPage() {
     } else {
       return `$${volume.toFixed(2)}`
     }
-  }
-
-  const generateFallbackData = () => {
-    const fallbackCryptoData: CryptoData[] = [
-      {
-        symbol: "BTC",
-        name: "Bitcoin",
-        price: 50000 + Math.random() * 5000,
-        change: 2500,
-        changePercent: 5.2,
-        marketCap: "$1.02T",
-        volume: "$32.5B",
-        high24h: 52000,
-        low24h: 49000,
-        description:
-          "Bitcoin is the first decentralized cryptocurrency. It was created in 2009 by an unknown person using the pseudonym Satoshi Nakamoto.",
-      },
-      {
-        symbol: "ETH",
-        name: "Ethereum",
-        price: 3000 + Math.random() * 300,
-        change: -120,
-        changePercent: -3.8,
-        marketCap: "$350B",
-        volume: "$18.7B",
-        high24h: 3200,
-        low24h: 2900,
-        description:
-          "Ethereum is a decentralized, open-source blockchain with smart contract functionality. Ether is the native cryptocurrency of the platform.",
-      },
-      {
-        symbol: "BNB",
-        name: "Binance Coin",
-        price: 400 + Math.random() * 40,
-        change: 12,
-        changePercent: 3.1,
-        marketCap: "$50B",
-        volume: "$2.1B",
-        high24h: 420,
-        low24h: 390,
-        description:
-          "Binance Coin is the cryptocurrency issued by the Binance exchange and trades with the BNB symbol.",
-      },
-      {
-        symbol: "XRP",
-        name: "Ripple",
-        price: 0.5 + Math.random() * 0.05,
-        change: 0.02,
-        changePercent: 4.2,
-        marketCap: "$25B",
-        volume: "$1.8B",
-        high24h: 0.55,
-        low24h: 0.48,
-        description:
-          "XRP is the native cryptocurrency of the XRP Ledger, which is an open-source, permissionless and decentralized blockchain technology.",
-      },
-      {
-        symbol: "ADA",
-        name: "Cardano",
-        price: 1.2 + Math.random() * 0.12,
-        change: -0.08,
-        changePercent: -6.2,
-        marketCap: "$15B",
-        volume: "$1.2B",
-        high24h: 1.3,
-        low24h: 1.15,
-        description:
-          "Cardano is a public blockchain platform. It is open-source and decentralized, with consensus achieved using proof of stake.",
-      },
-      {
-        symbol: "DOGE",
-        name: "Dogecoin",
-        price: 0.08 + Math.random() * 0.008,
-        change: 0.006,
-        changePercent: 8.1,
-        marketCap: "$12B",
-        volume: "$980M",
-        high24h: 0.09,
-        low24h: 0.075,
-        description:
-          "Dogecoin is a cryptocurrency created by software engineers Billy Markus and Jackson Palmer as a joke.",
-      },
-      {
-        symbol: "SOL",
-        name: "Solana",
-        price: 100 + Math.random() * 10,
-        change: 7,
-        changePercent: 7.5,
-        marketCap: "$30B",
-        volume: "$2.5B",
-        high24h: 105,
-        low24h: 95,
-        description:
-          "Solana is a high-performance blockchain supporting builders around the world creating crypto apps that scale.",
-      },
-      {
-        symbol: "DOT",
-        name: "Polkadot",
-        price: 15 + Math.random() * 1.5,
-        change: -0.8,
-        changePercent: -5.1,
-        marketCap: "$8B",
-        volume: "$650M",
-        high24h: 16,
-        low24h: 14.5,
-        description: "Polkadot is a sharded multichain network founded by the Web3 Foundation.",
-      },
-    ]
-
-    // Add sparkline data to each crypto
-    fallbackCryptoData.forEach((crypto) => {
-      crypto.sparklineData = generateSparklineData(crypto.price, crypto.changePercent)
-    })
-
-    setCryptoData(fallbackCryptoData)
-    setFilteredData(fallbackCryptoData)
   }
 
   const saveCrypto = async (crypto: CryptoData) => {
@@ -680,7 +610,7 @@ export default function CryptoPage() {
                         <div className="h-[60px] w-full">
                           <PriceSparkline
                             data={crypto.sparklineData || []}
-                            width={300}
+                            width={320}
                             height={60}
                             showTooltip={false}
                             lineColor={crypto.changePercent >= 0 ? "#22c55e" : "#ef4444"}
@@ -859,126 +789,229 @@ export default function CryptoPage() {
 
         {/* Crypto details modal */}
         <AnimatePresence>
-          {selectedCrypto && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setSelectedCrypto(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-card max-w-2xl w-full rounded-lg shadow-xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
+  {selectedCrypto && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      onClick={() => setSelectedCrypto(null)}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-card w-full max-w-2xl max-h-[90vh] rounded-lg shadow-xl overflow-hidden my-8 mx-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Fixed Header */}
+        <div className="sticky top-0 bg-card/95 backdrop-blur-sm border-b p-6 z-10">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-full ${getPerformanceBackground(selectedCrypto.changePercent)}`}>
+                <span className="text-2xl">{getPerformanceEmoji(selectedCrypto.changePercent)}</span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-medium">{selectedCrypto.name}</h2>
+                <p className="text-muted-foreground">{selectedCrypto.symbol}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={selectedCrypto.changePercent >= 0 ? "default" : "destructive"}>
+                {getSentimentDescription(selectedCrypto.changePercent)}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedCrypto(null)}
+                className="h-8 w-8 p-0"
               >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-full ${getPerformanceBackground(selectedCrypto.changePercent)}`}>
-                        <span className="text-2xl">{getPerformanceEmoji(selectedCrypto.changePercent)}</span>
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-medium">{selectedCrypto.name}</h2>
-                        <p className="text-muted-foreground">{selectedCrypto.symbol}</p>
-                      </div>
-                    </div>
-                    <Badge variant={selectedCrypto.changePercent >= 0 ? "default" : "destructive"}>
-                      {getSentimentDescription(selectedCrypto.changePercent)}
-                    </Badge>
-                  </div>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <div className="text-3xl font-medium mb-2">
-                        ${selectedCrypto.price < 1 ? selectedCrypto.price.toFixed(4) : selectedCrypto.price.toFixed(2)}
-                      </div>
-                      <div className={`flex items-center gap-1 ${getPerformanceColor(selectedCrypto.changePercent)}`}>
-                        {selectedCrypto.changePercent >= 0 ? (
-                          <ArrowUpIcon className="h-4 w-4" />
-                        ) : (
-                          <ArrowDownIcon className="h-4 w-4" />
-                        )}
-                        <span>
-                          {selectedCrypto.changePercent >= 0 ? "+" : ""}
-                          {selectedCrypto.changePercent.toFixed(2)}% (24h)
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-muted-foreground text-sm">Market Cap</div>
-                        <div className="font-medium">{selectedCrypto.marketCap}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground text-sm">24h Volume</div>
-                        <div className="font-medium">{selectedCrypto.volume}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground text-sm">24h High</div>
-                        <div className="font-medium">${selectedCrypto.high24h.toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground text-sm">24h Low</div>
-                        <div className="font-medium">${selectedCrypto.low24h.toFixed(2)}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">Price Chart (24h)</h3>
-                    <div className="h-[200px] w-full">
-                      <PriceSparkline
-                        data={selectedCrypto.sparklineData || []}
-                        width={600}
-                        height={200}
-                        showTooltip={true}
-                        lineColor={selectedCrypto.changePercent >= 0 ? "#22c55e" : "#ef4444"}
-                        fillColor={
-                          selectedCrypto.changePercent >= 0 ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)"
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">About {selectedCrypto.name}</h3>
-                    <p className="text-muted-foreground">{selectedCrypto.description}</p>
-                  </div>
-
-                  <div className="flex justify-between gap-4">
-                    <Button variant="outline" className="flex-1" onClick={() => saveCrypto(selectedCrypto)}>
-                      <StarIcon
-                        className={`h-4 w-4 mr-2 ${savedCryptos.includes(selectedCrypto.symbol) ? "fill-yellow-400 text-yellow-400" : ""}`}
-                      />
-                      {savedCryptos.includes(selectedCrypto.symbol) ? "Saved" : "Save"}
-                    </Button>
-                    <Button variant="outline" className="flex-1" onClick={() => researchCrypto(selectedCrypto)}>
-                      <SearchIcon className="h-4 w-4 mr-2" />
-                      Research
-                    </Button>
-                    <Button
-                      variant="default"
-                      className="flex-1"
-                      onClick={() => {
-                        window.open(
-                          `https://www.coingecko.com/en/coins/${selectedCrypto.name.toLowerCase().replace(" ", "-")}`,
-                          "_blank",
-                        )
-                      }}
-                    >
-                      <ExternalLinkIcon className="h-4 w-4 mr-2" />
-                      Learn More
-                    </Button>
-                  </div>
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="p-6 space-y-6">
+            {/* Price Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="text-3xl font-medium mb-2">
+                  ${selectedCrypto.price < 1 ? selectedCrypto.price.toFixed(4) : selectedCrypto.price.toFixed(2)}
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div className={`flex items-center gap-1 ${getPerformanceColor(selectedCrypto.changePercent)}`}>
+                  {selectedCrypto.changePercent >= 0 ? (
+                    <ArrowUpIcon className="h-4 w-4" />
+                  ) : (
+                    <ArrowDownIcon className="h-4 w-4" />
+                  )}
+                  <span>
+                    {selectedCrypto.changePercent >= 0 ? "+" : ""}
+                    {selectedCrypto.changePercent.toFixed(2)}% (24h)
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-muted-foreground text-sm">Market Cap</div>
+                  <div className="font-medium">{selectedCrypto.marketCap}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-sm">24h Volume</div>
+                  <div className="font-medium">{selectedCrypto.volume}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-sm">24h High</div>
+                  <div className="font-medium">${selectedCrypto.high24h.toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-sm">24h Low</div>
+                  <div className="font-medium">${selectedCrypto.low24h.toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Price Chart */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Price Chart (24h)</h3>
+              <div className="h-[200px] w-full rounded-lg border bg-muted/20 overflow-hidden">
+                <PriceSparkline
+                  data={selectedCrypto.sparklineData || []}
+                  width={625}
+                  height={200}
+                  showTooltip={true}
+                  lineColor={selectedCrypto.changePercent >= 0 ? "#22c55e" : "#ef4444"}
+                  fillColor={
+                    selectedCrypto.changePercent >= 0 ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)"
+                  }
+                />
+              </div>
+            </div>
+
+            {/* About Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">About {selectedCrypto.name}</h3>
+              <p className="text-muted-foreground leading-relaxed">{selectedCrypto.description}</p>
+            </div>
+
+            {/* Market Insights Section */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <LightbulbIcon className="h-5 w-5 text-yellow-500" />
+                  Market Insights
+                </h3>
+                
+                {!cryptoInsight || cryptoInsight.symbol !== selectedCrypto.symbol ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => fetchCryptoInsights(selectedCrypto)}
+                    disabled={insightLoading}
+                  >
+                    {insightLoading ? (
+                      <>
+                        <RefreshCwIcon className="h-4 w-4 mr-2 animate-spin" />
+                        Loading
+                      </>
+                    ) : (
+                      <>
+                        <BarChart3Icon className="h-4 w-4 mr-2" />
+                        Get Insights
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Badge variant={cryptoInsight.changePercent >= 0 ? "default" : "destructive"}>
+                    {cryptoInsight.trend.charAt(0).toUpperCase() + cryptoInsight.trend.slice(1)}
+                  </Badge>
+                )}
+              </div>
+              
+              {cryptoInsight && cryptoInsight.symbol === selectedCrypto.symbol ? (
+                <Card className="bg-muted/40 border-none">
+                  <CardContent className="p-4">
+                    <div className="mb-3">
+                      <p className="text-sm font-medium leading-relaxed">{cryptoInsight.summary}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Last updated: {new Date(cryptoInsight.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                    
+                    <Separator className="my-3" />
+                    
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="analysis" className="border-none">
+                        <AccordionTrigger className="py-2 hover:no-underline">
+                          <span className="text-sm font-medium">Detailed Analysis</span>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="text-sm space-y-3 mt-2 leading-relaxed">
+                            {cryptoInsight.analysis.split('\n\n').map((paragraph, index) => (
+                              <p key={index}>{paragraph}</p>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              ) : insightLoading ? (
+                <Card className="bg-muted/40 border-none">
+                  <CardContent className="p-4 flex flex-col gap-3">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="text-center py-8 bg-muted/40 rounded-lg">
+                  <BarChart3Icon className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Get real-time market analysis and insights for {selectedCrypto.name}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm border-t p-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => saveCrypto(selectedCrypto)}>
+              <StarIcon
+                className={`h-4 w-4 mr-2 ${savedCryptos.includes(selectedCrypto.symbol) ? "fill-yellow-400 text-yellow-400" : ""}`}
+              />
+              {savedCryptos.includes(selectedCrypto.symbol) ? "Saved" : "Save"}
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => researchCrypto(selectedCrypto)}>
+              <SearchIcon className="h-4 w-4 mr-2" />
+              Research
+            </Button>
+            <Button
+              variant="default"
+              className="flex-1"
+              onClick={() => {
+                window.open(
+                  `https://www.coingecko.com/en/coins/${selectedCrypto.name.toLowerCase().replace(" ", "-")}`,
+                  "_blank",
+                )
+              }}
+            >
+              <ExternalLinkIcon className="h-4 w-4 mr-2" />
+              Learn More
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
       </div>
     </Layout>
   )

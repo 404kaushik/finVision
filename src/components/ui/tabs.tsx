@@ -12,7 +12,7 @@ const Tabs = React.forwardRef<
   <TabsPrimitive.Root
     ref={ref}
     data-slot="tabs"
-    className={cn("flex flex-col gap-2", className)}
+    className={cn("flex flex-col gap-2 overflow-auto", className)}
     {...props}
   />
 ))
