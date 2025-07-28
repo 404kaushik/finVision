@@ -4,6 +4,7 @@ import { Inter, Poppins } from "next/font/google"
 import { AuthProvider } from "@/context/AuthContext"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { Toaster } from "sonner"
+import Script from "next/script"
 
 // Use Poppins as the main font
 const poppins = Poppins({
@@ -32,6 +33,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable} font-sans`} suppressHydrationWarning>
+      <head>
+        {/* Ezoic Integration Script */}
+        <Script
+          id="ezoic-script"
+          strategy="afterInteractive"
+          src="https://go.ezoic.net/ezoic/ezoic.js"
+        />
+      </head>
       <body>
         <AuthProvider>
           <ThemeProvider>
