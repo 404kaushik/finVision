@@ -43,7 +43,7 @@ export default function CompanyImages({ images }: { images: { id: string; url: s
       animate="show"
     >
       {images.map((img) => (
-        <motion.div key={img.id} variants={item} whileHover={{ scale: 1.03 }} transition={{ duration: 0.2 }}>
+        <motion.div key={img.id} whileHover={{ scale: 1.03 }} transition={{ duration: 0.2, ease: [0.43, 0.13, 0.23, 0.96] }}>
           <Card className=" bg-background/50 backdrop-blur-sm border border-muted/30 rounded-xl overflow-hidden group">
             <div className="relative">
               <AspectRatio ratio={16 / 9}>
