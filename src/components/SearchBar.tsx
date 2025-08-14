@@ -133,7 +133,7 @@ const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
                     variant={"ghost"}
                     className="absolute right-14 cursor-pointer"
                   >
-                    <XIcon className="h-4 w-4" />
+                    <XIcon className="h-4 w-4 mr-8" />
                   </Button>
                 )}
                 <Button

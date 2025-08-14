@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Background elements -->
+  <g opacity="0.1">
+    <circle cx="200" cy="300" r="150" fill="#40c057" />
+    <circle cx="400" cy="300" r="150" fill="#339af0" />
+    <circle cx="600" cy="300" r="150" fill="#ff922b" />
+  </g>
+  
+  <!-- ESG Circles -->
+  <g>
+    <!-- Environmental -->
+    <g transform="translate(200, 300)">
+      <circle r="120" fill="none" stroke="#40c057" stroke-width="4" />
+      <g>
+        <!-- Leaf icon -->
+        <path d="M-40,-20 C0,-60 40,-40 40,0 C40,40 0,60 -40,20 Z" fill="none" stroke="#40c057" stroke-width="3" />
+        <path d="M-40,-20 C-20,0 -20,20 -40,20" fill="none" stroke="#40c057" stroke-width="3" />
+        <path d="M0,-30 L0,30" fill="none" stroke="#40c057" stroke-width="3" />
+      </g>
+      <text y="70" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#40c057">Environmental</text>
+    </g>
+    
+    <!-- Social -->
+    <g transform="translate(400, 300)">
+      <circle r="120" fill="none" stroke="#339af0" stroke-width="4" />
+      <g>
+        <!-- People icon -->
+        <circle cx="-30" cy="-20" r="20" fill="none" stroke="#339af0" stroke-width="3" />
+        <circle cx="30" cy="-20" r="20" fill="none" stroke="#339af0" stroke-width="3" />
+        <circle cx="0" cy="30" r="20" fill="none" stroke="#339af0" stroke-width="3" />
+        <line x1="-20" y1="-5" x2="20" y2="-5" stroke="#339af0" stroke-width="3" />
+        <line x1="-15" y1="15" x2="-5" y2="25" stroke="#339af0" stroke-width="3" />
+        <line x1="15" y1="15" x2="5" y2="25" stroke="#339af0" stroke-width="3" />
+      </g>
+      <text y="70" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#339af0">Social</text>
+    </g>
+    
+    <!-- Governance -->
+    <g transform="translate(600, 300)">
+      <circle r="120" fill="none" stroke="#ff922b" stroke-width="4" />
+      <g>
+        <!-- Building/governance icon -->
+        <rect x="-40" y="-40" width="80" height="80" fill="none" stroke="#ff922b" stroke-width="3" />
+        <rect x="-30" y="-30" width="20" height="20" fill="none" stroke="#ff922b" stroke-width="2" />
+        <rect x="10" y="-30" width="20" height="20" fill="none" stroke="#ff922b" stroke-width="2" />
+        <rect x="-30" y="10" width="20" height="20" fill="none" stroke="#ff922b" stroke-width="2" />
+        <rect x="10" y="10" width="20" height="20" fill="none" stroke="#ff922b" stroke-width="2" />
+      </g>
+      <text y="70" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#ff922b">Governance</text>
+    </g>
+  </g>
+  
+  <!-- Connecting lines -->
+  <g stroke-dasharray="5,5" stroke-width="2">
+    <line x1="300" y1="300" x2="500" y2="300" stroke="#adb5bd" />
+    <line x1="200" y1="400" x2="400" y2="400" stroke="#adb5bd" />
+    <line x1="400" y1="400" x2="600" y2="400" stroke="#adb5bd" />
+  </g>
+  
+  <!-- Stock chart overlay -->
+  <g transform="translate(0, 500)">
+    <path d="M100,0 L200,-30 L300,-50 L400,-80 L500,-100 L600,-130 L700,-150" fill="none" stroke="#20c997" stroke-width="3" />
+    <path d="M100,0 L700,-150" fill="none" stroke="#20c997" stroke-width="1" stroke-dasharray="5,5" />
+  </g>
+</svg>

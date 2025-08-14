@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Background grid -->
+  <g stroke="#e9ecef" stroke-width="1">
+    <g id="vertical-lines">
+      <line x1="100" y1="100" x2="100" y2="500" />
+      <line x1="200" y1="100" x2="200" y2="500" />
+      <line x1="300" y1="100" x2="300" y2="500" />
+      <line x1="400" y1="100" x2="400" y2="500" />
+      <line x1="500" y1="100" x2="500" y2="500" />
+      <line x1="600" y1="100" x2="600" y2="500" />
+      <line x1="700" y1="100" x2="700" y2="500" />
+    </g>
+    <g id="horizontal-lines">
+      <line x1="100" y1="100" x2="700" y2="100" />
+      <line x1="100" y1="200" x2="700" y2="200" />
+      <line x1="100" y1="300" x2="700" y2="300" />
+      <line x1="100" y1="400" x2="700" y2="400" />
+      <line x1="100" y1="500" x2="700" y2="500" />
+    </g>
+  </g>
+  
+  <!-- Algorithmic trading visualization -->
+  <g>
+    <!-- Axes -->
+    <line x1="100" y1="500" x2="700" y2="500" stroke="#495057" stroke-width="2" />
+    <line x1="100" y1="100" x2="100" y2="500" stroke="#495057" stroke-width="2" />
+    
+    <!-- Axis labels -->
+    <text x="400" y="530" text-anchor="middle" font-family="Arial" font-size="14" fill="#495057">Time</text>
+    <text x="70" y="300" text-anchor="middle" font-family="Arial" font-size="14" fill="#495057" transform="rotate(-90, 70, 300)">Price</text>
+    
+    <!-- Stock price line -->
+    <path d="M100,400 L130,390 L160,410 L190,380 L220,400 L250,370 L280,350 L310,330 L340,360 L370,340 L400,320 L430,340 L460,310 L490,290 L520,310 L550,280 L580,300 L610,270 L640,250 L670,230 L700,200" 
+          fill="none" stroke="#495057" stroke-width="2" />
+    
+    <!-- Algorithm buy signals -->
+    <g fill="#40c057">
+      <circle cx="190" cy="380" r="6" />
+      <circle cx="340" cy="360" r="6" />
+      <circle cx="460" cy="310" r="6" />
+      <circle cx="580" cy="300" r="6" />
+      
+      <!-- Buy arrows -->
+      <path d="M190,350 L190,370 M180,360 L190,350 L200,360" stroke="#40c057" stroke-width="2" />
+      <path d="M340,330 L340,350 M330,340 L340,330 L350,340" stroke="#40c057" stroke-width="2" />
+      <path d="M460,280 L460,300 M450,290 L460,280 L470,290" stroke="#40c057" stroke-width="2" />
+      <path d="M580,270 L580,290 M570,280 L580,270 L590,280" stroke="#40c057" stroke-width="2" />
+    </g>
+    
+    <!-- Algorithm sell signals -->
+    <g fill="#fa5252">
+      <circle cx="250" cy="370" r="6" />
+      <circle cx="400" cy="320" r="6" />
+      <circle cx="520" cy="310" r="6" />
+      <circle cx="670" cy="230" r="6" />
+      
+      <!-- Sell arrows -->
+      <path d="M250,400 L250,380 M240,390 L250,400 L260,390" stroke="#fa5252" stroke-width="2" />
+      <path d="M400,350 L400,330 M390,340 L400,350 L410,340" stroke="#fa5252" stroke-width="2" />
+      <path d="M520,340 L520,320 M510,330 L520,340 L530,330" stroke="#fa5252" stroke-width="2" />
+      <path d="M670,260 L670,240 M660,250 L670,260 L680,250" stroke="#fa5252" stroke-width="2" />
+    </g>
+  </g>
+  
+  <!-- Algorithm visualization elements -->
+  <g>
+    <!-- Binary/code background -->
+    <g fill="#212529" font-family="monospace" font-size="10" opacity="0.1">
+      <text x="120" y="120">01001010</text>
+      <text x="220" y="140">10110101</text>
+      <text x="320" y="160">01101001</text>
+      <text x="420" y="130">10010110</text>
+      <text x="520" y="150">01011010</text>
+      <text x="620" y="170">10101101</text>
+      
+      <text x="150" y="190">if(price < ma_50 && rsi < 30)</text>
+      <text x="250" y="210">  return BUY_SIGNAL;</text>
+      <text x="350" y="230">else if(price > ma_50 && rsi > 70)</text>
+      <text x="450" y="250">  return SELL_SIGNAL;</text>
+    </g>
+    
+    <!-- Algorithm flow diagram -->
+    <g transform="translate(400, 180)">
+      <!-- Flow diagram background -->
+      <rect x="-150" y="-60" width="300" height="120" rx="10" fill="white" stroke="#339af0" stroke-width="2" opacity="0.8" />
+      
+      <!-- Flow elements -->
+      <g stroke="#339af0" stroke-width="2" fill="none">
+        <rect x="-120" y="-40" width="80" height="30" rx="5" />
+        <rect x="-20" y="-40" width="80" height="30" rx="5" />
+        <rect x="80" y="-40" width="80" height="30" rx="5" />
+        
+        <rect x="-120" y="10" width="80" height="30" rx="5" />
+        <rect x="-20" y="10" width="80" height="30" rx="5" />
+        <rect x="80" y="10" width="80" height="30" rx="5" />
+        
+        <!-- Connecting lines -->
+        <line x1="-40" y1="-25" x2="-20" y2="-25" />
+        <line x1="60" y1="-25" x2="80" y2="-25" />
+        <line x1="-40" y1="25" x2="-20" y2="25" />
+        <line x1="60" y1="25" x2="80" y2="25" />
+        
+        <line x1="-80" y1="-10" x2="-80" y2="10" />
+        <line x1="20" y1="-10" x2="20" y2="10" />
+        <line x1="120" y1="-10" x2="120" y2="10" />
+      </g>
+      
+      <!-- Flow text -->
+      <g font-family="Arial" font-size="10" text-anchor="middle" fill="#339af0">
+        <text x="-80" y="-25">Data Input</text>
+        <text x="20" y="-25">Analysis</text>
+        <text x="120" y="-25">Signal</text>
+        
+        <text x="-80" y="25">Pattern</text>
+        <text x="20" y="25">Decision</text>
+        <text x="120" y="25">Execution</text>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(600, 150)">
+    <rect width="160" height="80" fill="white" stroke="#dee2e6" rx="4" />
+    <circle cx="20" cy="25" r="6" fill="#40c057" />
+    <text x="35" y="30" font-family="Arial" font-size="14" fill="#343a40">Buy Signal</text>
+    <circle cx="20" cy="55" r="6" fill="#fa5252" />
+    <text x="35" y="60" font-family="Arial" font-size="14" fill="#343a40">Sell Signal</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="400" y="60" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#212529">Algorithmic Trading</text>
+</svg>

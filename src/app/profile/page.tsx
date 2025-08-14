@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Layout from "@/components/Layout"
 import { useAuth } from "@/context/AuthContext"
-import { FaUser, FaCog, FaSignOutAlt, FaChartLine, FaStar, FaCrown, FaCcAmazonPay, FaUserShield } from "react-icons/fa"
+import { FaUser, FaCog, FaSignOutAlt, FaChartLine, FaStar, FaCrown, FaCcAmazonPay, FaUserShield, FaTrash } from "react-icons/fa"
 import { supabase } from "@/utils/supabase/client"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -121,6 +121,14 @@ export default function ProfilePage() {
                         <Button variant="outline" className="group hover:bg-blue-50 transition-colors duration-300">
                           <FaCog className="mr-2 group-hover:rotate-180 transition-transform duration-500" />
                           Settings
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="group hover:bg-red-50 transition-colors duration-300"
+                          onClick={() => window.location.href = "/profile/delete-account"}
+                        >
+                          <FaTrash className="mr-2 group-hover:text-red-500 transition-colors duration-300" />
+                          Delete Account
                         </Button>
                         <Button 
                           variant="destructive" 

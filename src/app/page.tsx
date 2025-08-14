@@ -205,13 +205,41 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 className="text-center mb-20"
               >
-                <motion.div variants={itemVariants} className="inline-block mb-4">
+                <motion.div variants={{
+                  hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }
+                }} className="inline-block mb-4">
                   <div className="w-12 h-1 bg-primary mx-auto mb-6"></div>
                 </motion.div>
-                <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
+                <motion.h2 variants={{
+                  hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }
+                }} className="text-3xl md:text-4xl font-bold mb-4">
                   Why Choose FinInsight?
                 </motion.h2>
-                <motion.p variants={itemVariants} className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                <motion.p variants={{hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }}} className="text-xl text-muted-foreground max-w-2xl mx-auto">
                   Our platform combines cutting-edge AI with financial expertise to deliver insights that matter.
                 </motion.p>
               </motion.div>
@@ -236,7 +264,18 @@ export default function Home() {
                 ].map((feature, index) => (
                   <motion.div
                     key={index}
-                    variants={itemVariants}
+                    variants={{
+                      hidden: { y: 20, opacity: 0 },
+                      visible: {
+                        y: 0,
+                        opacity: 1,
+                        transition: {
+                          type: "tween",
+                          duration: 0.6,
+                          ease: "easeOut"
+                        }
+                      }
+                    }}
                     whileHover={{ y: -5 }}
                     className="bg-card p-8 rounded-xl border border-border hover:border-primary/20 transition-all duration-300 group"
                   >
@@ -275,13 +314,37 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 className="text-center mb-16"
               >
-                <motion.div variants={itemVariants} className="inline-block mb-4">
+                <motion.div variants={{hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }}} className="inline-block mb-4">
                   <div className="w-12 h-1 bg-primary mx-auto mb-6"></div>
                 </motion.div>
-                <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
+                <motion.h2 variants={{hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }}} className="text-3xl md:text-4xl font-bold mb-4">
                   How It Works
                 </motion.h2>
-                <motion.p variants={itemVariants} className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                <motion.p variants={{hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }}} className="text-xl text-muted-foreground max-w-2xl mx-auto">
                   Simple steps to get the financial insights you need
                 </motion.p>
               </motion.div>
@@ -312,7 +375,15 @@ export default function Home() {
                 ].map((step, index) => (
                   <motion.div
                     key={index}
-                    variants={itemVariants}
+                    variants={{hidden: { y: 20, opacity: 0 },
+                  visible: {
+                    y: 0,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.6,
+                      ease: ["easeOut"]
+                    }
+                  }}}
                     className="bg-card p-8 rounded-xl border border-border relative z-10"
                   >
                     <div className="absolute -top-4 left-8 bg-primary text-white text-xs font-bold px-2 py-1 rounded">

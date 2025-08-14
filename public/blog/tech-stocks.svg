@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Background grid -->
+  <g stroke="#e9ecef" stroke-width="1">
+    <g id="vertical-lines">
+      <line x1="100" y1="100" x2="100" y2="500" />
+      <line x1="200" y1="100" x2="200" y2="500" />
+      <line x1="300" y1="100" x2="300" y2="500" />
+      <line x1="400" y1="100" x2="400" y2="500" />
+      <line x1="500" y1="100" x2="500" y2="500" />
+      <line x1="600" y1="100" x2="600" y2="500" />
+      <line x1="700" y1="100" x2="700" y2="500" />
+    </g>
+    <g id="horizontal-lines">
+      <line x1="100" y1="100" x2="700" y2="100" />
+      <line x1="100" y1="200" x2="700" y2="200" />
+      <line x1="100" y1="300" x2="700" y2="300" />
+      <line x1="100" y1="400" x2="700" y2="400" />
+      <line x1="100" y1="500" x2="700" y2="500" />
+    </g>
+  </g>
+  
+  <!-- Tech stock growth chart -->
+  <g>
+    <!-- Axes -->
+    <line x1="100" y1="500" x2="700" y2="500" stroke="#495057" stroke-width="2" />
+    <line x1="100" y1="100" x2="100" y2="500" stroke="#495057" stroke-width="2" />
+    
+    <!-- Axis labels -->
+    <text x="400" y="530" text-anchor="middle" font-family="Arial" font-size="14" fill="#495057">Time</text>
+    <text x="70" y="300" text-anchor="middle" font-family="Arial" font-size="14" fill="#495057" transform="rotate(-90, 70, 300)">Value</text>
+    
+    <!-- Tech stock growth line -->
+    <path d="M100,450 L150,430 L200,440 L250,400 L300,380 L350,350 L400,300 L450,250 L500,180 L550,150 L600,120 L650,100 L700,80" 
+          fill="none" stroke="#339af0" stroke-width="3" />
+    
+    <!-- Bubble indicator -->
+    <path d="M100,450 L150,430 L200,440 L250,400 L300,380 L350,350 L400,300 L450,250 L500,180 L550,150 L600,120 L650,100 L700,80" 
+          fill="none" stroke="#ff6b6b" stroke-width="3" stroke-dasharray="5,5" />
+    
+    <!-- Sustainable growth reference line -->
+    <path d="M100,450 L150,440 L200,430 L250,420 L300,410 L350,400 L400,390 L450,380 L500,370 L550,360 L600,350 L650,340 L700,330" 
+          fill="none" stroke="#20c997" stroke-width="3" stroke-dasharray="10,5" />
+  </g>
+  
+  <!-- Tech icons -->
+  <g>
+    <!-- Microchip -->
+    <g transform="translate(200, 200)">
+      <rect x="-20" y="-20" width="40" height="40" fill="#e9ecef" stroke="#495057" stroke-width="2" />
+      <line x1="-20" y1="-10" x2="20" y2="-10" stroke="#495057" stroke-width="1" />
+      <line x1="-20" y1="0" x2="20" y2="0" stroke="#495057" stroke-width="1" />
+      <line x1="-20" y1="10" x2="20" y2="10" stroke="#495057" stroke-width="1" />
+      <line x1="-10" y1="-20" x2="-10" y2="20" stroke="#495057" stroke-width="1" />
+      <line x1="0" y1="-20" x2="0" y2="20" stroke="#495057" stroke-width="1" />
+      <line x1="10" y1="-20" x2="10" y2="20" stroke="#495057" stroke-width="1" />
+    </g>
+    
+    <!-- Cloud -->
+    <g transform="translate(350, 150)">
+      <path d="M-30,0 C-30,-15 -15,-25 0,-25 C10,-25 20,-20 25,-10 C35,-15 50,-5 50,5 C50,15 40,25 25,25 C20,35 5,35 -5,25 C-20,25 -30,15 -30,0 Z" 
+            fill="#e9ecef" stroke="#495057" stroke-width="2" />
+    </g>
+    
+    <!-- Mobile device -->
+    <g transform="translate(500, 120)">
+      <rect x="-15" y="-25" width="30" height="50" rx="5" fill="#e9ecef" stroke="#495057" stroke-width="2" />
+      <rect x="-10" y="-20" width="20" height="30" rx="2" fill="#dee2e6" stroke="#495057" stroke-width="1" />
+      <circle cx="0" cy="15" r="3" fill="#495057" />
+    </g>
+    
+    <!-- VR headset -->
+    <g transform="translate(650, 80)">
+      <path d="M-25,-5 C-25,-15 -15,-20 0,-20 C15,-20 25,-15 25,-5 C25,5 15,10 0,10 C-15,10 -25,5 -25,-5 Z" 
+            fill="#e9ecef" stroke="#495057" stroke-width="2" />
+      <rect x="-15" y="-15" width="30" height="20" rx="5" fill="#dee2e6" stroke="#495057" stroke-width="1" />
+    </g>
+  </g>
+  
+  <!-- Bubble indicator -->
+  <g transform="translate(600, 200)">
+    <circle r="50" fill="#ff6b6b" fill-opacity="0.2" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="5,5" />
+    <text text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#ff6b6b">Bubble?</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(150, 150)">
+    <rect width="180" height="90" fill="white" stroke="#dee2e6" rx="4" />
+    <line x1="20" y1="25" x2="50" y2="25" stroke="#339af0" stroke-width="3" />
+    <text x="60" y="30" font-family="Arial" font-size="14" fill="#343a40">Current Growth</text>
+    <line x1="20" y1="55" x2="50" y2="55" stroke="#ff6b6b" stroke-width="3" stroke-dasharray="5,5" />
+    <text x="60" y="60" font-family="Arial" font-size="14" fill="#343a40">Potential Bubble</text>
+    <line x1="20" y1="85" x2="50" y2="85" stroke="#20c997" stroke-width="3" stroke-dasharray="10,5" />
+    <text x="60" y="90" font-family="Arial" font-size="14" fill="#343a40">Sustainable Growth</text>
+  </g>
+</svg>

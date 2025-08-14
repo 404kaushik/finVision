@@ -22,8 +22,47 @@ const inter = Inter({
 })
 
 export const metadata = {
-  title: "Finance Research App",
-  description: "Deep research into company performance based on current trends",
+  title: {
+    default: "FinVision - AI-Powered Financial Research & Education Platform",
+    template: "%s | FinVision"
+  },
+  description: "Empowering investors with AI-driven financial insights, market analysis, and educational resources. Learn about stocks, crypto, and investment strategies with our comprehensive research platform.",
+  keywords: ["financial research", "stock analysis", "investment education", "market insights", "AI finance", "crypto analysis", "investment tools", "financial learning", "NVIDIA stock", "Tesla analysis", "Apple investment", "tech stocks 2024"],
+  authors: [{ name: "FinVision Team" }],
+  creator: "FinVision",
+  publisher: "FinVision",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://finvision.app',
+    title: 'FinVision - AI-Powered Financial Research & Education Platform',
+    description: 'Empowering investors with AI-driven financial insights, market analysis, and educational resources.',
+    siteName: 'FinVision',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FinVision - AI-Powered Financial Research & Education Platform',
+    description: 'Empowering investors with AI-driven financial insights, market analysis, and educational resources.',
+  },
+  verification: {
+    google: 'your-google-verification-code-here',
+  },
 }
 
 export default function RootLayout({
@@ -34,12 +73,26 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable} font-sans`} suppressHydrationWarning>
       <head>
-        {/* Ezoic Integration Script */}
+        {/* Google AdSense */}
         <Script
-          id="ezoic-script"
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID"
+          crossOrigin="anonymous"
           strategy="afterInteractive"
-          src="https://go.ezoic.net/ezoic/ezoic.js"
         />
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'GA_MEASUREMENT_ID');
+          `}
+        </Script>
       </head>
       <body>
         <AuthProvider>

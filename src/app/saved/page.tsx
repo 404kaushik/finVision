@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Layout from "@/components/Layout"
 import { supabase } from "@/utils/supabase/client"
+import { fetchStockData } from "@/utils/fetchStockData"
 import Link from "next/link"
 import Image from "next/image"
 import { FaStar, FaTrash, FaSpinner, FaSearch, FaSortAmountDown, FaExternalLinkAlt, FaEllipsisH, FaArrowUp, FaArrowDown, FaInfoCircle } from "react-icons/fa"
@@ -15,6 +16,7 @@ interface StockPerformance {
   percentChange: number;
   explanation: string;
   isLoading: boolean;
+  price: number;
 }
 
 const getCompanyLogo = (companyName: string): string => {
@@ -40,6 +42,7 @@ export default function SavedCompaniesPage() {
   const [logoErrors, setLogoErrors] = useState<Record<string, boolean>>({})
   const [stockPerformance, setStockPerformance] = useState<Record<string, StockPerformance>>({})
   const [showExplanation, setShowExplanation] = useState<string | null>(null)
+  const [stockData, setStockData] = useState<any>(null)
 
   useEffect(() => {
     fetchSavedCompanies()
@@ -115,8 +118,20 @@ export default function SavedCompaniesPage() {
         setCompanies(companiesWithEmojis)
         setFilteredCompanies(companiesWithEmojis)
         
-        companiesWithEmojis.forEach(company => {
+        companiesWithEmojis.forEach(async (company) => {
           fetchStockPerformance(company.id, company.company_name, company.created_research_at);
+          const data = await fetchStockData(company.company_name)
+          if(data){
+            setStockPerformance(prev => ({
+              ...prev,
+              [company.id]: {
+                ...prev[company.id] || {},
+                price: data.currentPrice,
+                isLoading: false,                
+              }
+            }))
+            console.log(data)
+          }
         });
       }
     } catch (error) {
@@ -129,7 +144,7 @@ export default function SavedCompaniesPage() {
   const fetchStockPerformance = async (id: string, companyName: string, savedDate: string) => {    
     setStockPerformance(prev => ({
       ...prev,
-      [id]: { percentChange: 0, explanation: "", isLoading: true }
+      [id]: { percentChange: 0, explanation: "", isLoading: true, price: 0 }
     }));
     
     try {
@@ -143,7 +158,8 @@ export default function SavedCompaniesPage() {
         [id]: { 
           percentChange: data.percentChange, 
           explanation: data.explanation,
-          isLoading: false
+          isLoading: false,
+          price: data.price
         }
       }));
     } catch (error) {
@@ -154,8 +170,9 @@ export default function SavedCompaniesPage() {
         [id]: { 
           percentChange: 0, 
           explanation: "Unable to fetch performance data",
-          isLoading: false
-        }
+          isLoading: false,
+          price: 0
+        } 
       }));
     }
   }
@@ -363,23 +380,22 @@ export default function SavedCompaniesPage() {
                           <div className="flex items-center gap-1">
                             <div 
                               className={`px-3 py-1 rounded-full flex items-center gap-1 ${
-                                stockPerformance[company.id]?.percentChange > 0 
+                                stockPerformance[company.id]?.price > 0 
                                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                  : stockPerformance[company.id]?.percentChange < 0 
+                                  : stockPerformance[company.id]?.price < 0 
                                     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
                               }`}
                             >
-                              {stockPerformance[company.id]?.percentChange > 0 ? (
+                              {stockPerformance[company.id]?.price > 0 ? (
                                 <FaArrowUp className="text-xs" />
-                              ) : stockPerformance[company.id]?.percentChange < 0 ? (
+                              ) : stockPerformance[company.id]?.price < 0 ? (
                                 <FaArrowDown className="text-xs" />
                               ) : (
                                 <span>—</span>
                               )}
                               <span className="font-medium">
-                                {stockPerformance[company.id]?.percentChange > 0 ? '+' : ''}
-                                {stockPerformance[company.id]?.percentChange}%
+                                ${stockPerformance[company.id]?.price?.toFixed(2) || "N/A"}
                               </span>
                               <button 
                                 onClick={() => toggleExplanation(company.id)}

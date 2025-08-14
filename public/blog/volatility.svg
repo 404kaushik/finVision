@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Background grid -->
+  <g stroke="#e9ecef" stroke-width="1">
+    <g id="vertical-lines">
+      <line x1="100" y1="100" x2="100" y2="500" />
+      <line x1="200" y1="100" x2="200" y2="500" />
+      <line x1="300" y1="100" x2="300" y2="500" />
+      <line x1="400" y1="100" x2="400" y2="500" />
+      <line x1="500" y1="100" x2="500" y2="500" />
+      <line x1="600" y1="100" x2="600" y2="500" />
+      <line x1="700" y1="100" x2="700" y2="500" />
+    </g>
+    <g id="horizontal-lines">
+      <line x1="100" y1="100" x2="700" y2="100" />
+      <line x1="100" y1="200" x2="700" y2="200" />
+      <line x1="100" y1="300" x2="700" y2="300" />
+      <line x1="100" y1="400" x2="700" y2="400" />
+      <line x1="100" y1="500" x2="700" y2="500" />
+    </g>
+  </g>
+  
+  <!-- Volatility chart -->
+  <g fill="none">
+    <!-- Baseline -->
+    <line x1="100" y1="300" x2="700" y2="300" stroke="#adb5bd" stroke-width="1" stroke-dasharray="5,5" />
+    
+    <!-- Volatile line chart -->
+    <path d="M100,300 L130,280 L160,320 L190,260 L220,340 L250,220 L280,380 L310,200 L340,400 L370,250 L400,350 L430,270 L460,330 L490,240 L520,360 L550,230 L580,370 L610,290 L640,310 L670,280 L700,320" 
+          stroke="#ff6b6b" stroke-width="3" />
+    
+    <!-- Less volatile comparison line -->
+    <path d="M100,300 L130,290 L160,310 L190,280 L220,320 L250,270 L280,330 L310,280 L340,320 L370,290 L400,310 L430,290 L460,310 L490,280 L520,320 L550,290 L580,310 L610,300 L640,305 L670,295 L700,305" 
+          stroke="#339af0" stroke-width="3" stroke-dasharray="10,5" />
+  </g>
+  
+  <!-- Volatility indicators -->
+  <g>
+    <!-- High volatility markers -->
+    <circle cx="250" cy="220" r="6" fill="#ff6b6b" />
+    <circle cx="310" cy="200" r="6" fill="#ff6b6b" />
+    <circle cx="340" cy="400" r="6" fill="#ff6b6b" />
+    <circle cx="550" cy="230" r="6" fill="#ff6b6b" />
+    
+    <!-- Arrows indicating volatility -->
+    <g fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2">
+      <path d="M250,180 L250,210 M240,190 L250,180 L260,190" />
+      <path d="M310,160 L310,190 M300,170 L310,160 L320,170" />
+      <path d="M340,440 L340,410 M330,430 L340,440 L350,430" />
+      <path d="M550,190 L550,220 M540,200 L550,190 L560,200" />
+    </g>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(550, 150)">
+    <rect width="140" height="80" fill="white" stroke="#dee2e6" rx="4" />
+    <line x1="20" y1="25" x2="50" y2="25" stroke="#ff6b6b" stroke-width="3" />
+    <text x="60" y="30" font-family="Arial" font-size="14" fill="#343a40">High Volatility</text>
+    <line x1="20" y1="55" x2="50" y2="55" stroke="#339af0" stroke-width="3" stroke-dasharray="10,5" />
+    <text x="60" y="60" font-family="Arial" font-size="14" fill="#343a40">Low Volatility</text>
+  </g>
+</svg>

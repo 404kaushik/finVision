@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/context/ThemeContext"
 import ThemeToggle from "@/components/ThemeToggle"
 import LoginButton from "./LoginLogoutButton"
 import { StockTickerHeader } from "@/components/StockTickerHeader"
+import Footer from "@/components/Footer"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -19,6 +20,7 @@ import {
   CoinsIcon,
   CircleDollarSign,
   Book,
+  NewspaperIcon,
 } from "lucide-react"
 
 interface LayoutProps {
@@ -33,6 +35,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: "Dashboard", href: "/dashboard", icon: <BarChart2Icon className="h-5 w-5" /> },
     { name: "Research", href: "/research", icon: <Book className="h-5 w-5" /> },
     { name: "Market", href: "/market", icon: <CircleDollarSign className="market-section h-5 w-5" /> },
+    { name: "Blog", href: "/blog", icon: <NewspaperIcon className="h-5 w-5" /> },
     { name: "Learn", href: "/learn", icon: <BookOpenIcon className="h-5 w-5" /> },
     { name: "Saved", href: "/saved", icon: <SaveIcon className="h-5 w-5" /> },
     { name: "Crypto", href: "/crypto", icon: <CoinsIcon className="crypto-section h-5 w-5" /> },
@@ -105,6 +108,11 @@ export default function Layout({ children }: LayoutProps) {
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto pb-16 md:pb-0 lg:ml-64 lg:p-8">{children}</main>
+          </div>
+          
+          {/* Footer */}
+          <div className="md:ml-16 lg:ml-64">
+            <Footer />
           </div>
         </div>
 

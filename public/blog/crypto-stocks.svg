@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Background elements -->
+  <g opacity="0.1">
+    <rect x="100" y="100" width="600" height="400" rx="20" fill="#339af0" />
+  </g>
+  
+  <!-- Dividing line -->
+  <line x1="400" y1="100" x2="400" y2="500" stroke="#dee2e6" stroke-width="2" stroke-dasharray="10,10" />
+  
+  <!-- Traditional Stocks Side -->
+  <g transform="translate(200, 300)">
+    <!-- Stock building icon -->
+    <g>
+      <rect x="-60" y="-80" width="120" height="160" rx="5" fill="none" stroke="#495057" stroke-width="3" />
+      
+      <!-- Building details -->
+      <line x1="-60" y1="-40" x2="60" y2="-40" stroke="#495057" stroke-width="2" />
+      <line x1="-60" y1="0" x2="60" y2="0" stroke="#495057" stroke-width="2" />
+      <line x1="-60" y1="40" x2="60" y2="40" stroke="#495057" stroke-width="2" />
+      
+      <!-- Columns -->
+      <line x1="-30" y1="-80" x2="-30" y2="80" stroke="#495057" stroke-width="2" />
+      <line x1="0" y1="-80" x2="0" y2="80" stroke="#495057" stroke-width="2" />
+      <line x1="30" y1="-80" x2="30" y2="80" stroke="#495057" stroke-width="2" />
+      
+      <!-- Roof -->
+      <rect x="-70" y="-90" width="140" height="10" rx="2" fill="#495057" />
+    </g>
+    
+    <!-- Stock chart -->
+    <g transform="translate(0, 120)">
+      <path d="M-80,0 L-60,-10 L-40,10 L-20,-5 L0,15 L20,5 L40,-10 L60,-20 L80,-5" fill="none" stroke="#495057" stroke-width="3" />
+    </g>
+    
+    <text y="160" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="#495057">Traditional Stocks</text>
+  </g>
+  
+  <!-- Cryptocurrency Side -->
+  <g transform="translate(600, 300)">
+    <!-- Bitcoin/crypto icon -->
+    <g>
+      <circle r="80" fill="none" stroke="#f59f00" stroke-width="3" />
+      
+      <!-- Bitcoin symbol -->
+      <g transform="rotate(-15)">
+        <rect x="-20" y="-40" width="40" height="80" rx="5" fill="none" stroke="#f59f00" stroke-width="3" />
+        <line x1="-30" y1="-20" x2="30" y2="-20" stroke="#f59f00" stroke-width="3" />
+        <line x1="-30" y1="20" x2="30" y2="20" stroke="#f59f00" stroke-width="3" />
+        <line x1="0" y1="-50" x2="0" y2="50" stroke="#f59f00" stroke-width="3" />
+      </g>
+    </g>
+    
+    <!-- Crypto chart (more volatile) -->
+    <g transform="translate(0, 120)">
+      <path d="M-80,0 L-60,-30 L-40,20 L-20,-40 L0,30 L20,-20 L40,10 L60,-35 L80,5" fill="none" stroke="#f59f00" stroke-width="3" />
+    </g>
+    
+    <text y="160" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="#f59f00">Cryptocurrency</text>
+  </g>
+  
+  <!-- Comparison elements -->
+  <g transform="translate(400, 150)">
+    <text text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#212529">VS</text>
+  </g>
+  
+  <!-- Comparison metrics -->
+  <g font-family="Arial" font-size="14" fill="#495057">
+    <!-- Traditional metrics -->
+    <g transform="translate(200, 450)">
+      <text y="0" text-anchor="middle">Established</text>
+      <text y="20" text-anchor="middle">Regulated</text>
+      <text y="40" text-anchor="middle">Lower Volatility</text>
+    </g>
+    
+    <!-- Crypto metrics -->
+    <g transform="translate(600, 450)">
+      <text y="0" text-anchor="middle">Emerging</text>
+      <text y="20" text-anchor="middle">Decentralized</text>
+      <text y="40" text-anchor="middle">Higher Volatility</text>
+    </g>
+  </g>
+</svg>

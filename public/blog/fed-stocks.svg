@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Federal Reserve Building -->
+  <g transform="translate(400, 200)">
+    <!-- Building base -->
+    <rect x="-150" y="-80" width="300" height="160" fill="#e9ecef" stroke="#495057" stroke-width="2" />
+    
+    <!-- Columns -->
+    <g fill="#dee2e6" stroke="#495057" stroke-width="1">
+      <rect x="-130" y="-80" width="20" height="160" />
+      <rect x="-90" y="-80" width="20" height="160" />
+      <rect x="-50" y="-80" width="20" height="160" />
+      <rect x="-10" y="-80" width="20" height="160" />
+      <rect x="30" y="-80" width="20" height="160" />
+      <rect x="70" y="-80" width="20" height="160" />
+      <rect x="110" y="-80" width="20" height="160" />
+    </g>
+    
+    <!-- Roof -->
+    <path d="M-170,-80 L-170,-100 L170,-100 L170,-80 Z" fill="#ced4da" stroke="#495057" stroke-width="2" />
+    
+    <!-- Steps -->
+    <path d="M-100,80 L100,80 L100,100 L-100,100 Z" fill="#ced4da" stroke="#495057" stroke-width="1" />
+    <path d="M-120,100 L120,100 L120,120 L-120,120 Z" fill="#ced4da" stroke="#495057" stroke-width="1" />
+    
+    <!-- Federal Reserve text -->
+    <text y="-50" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#495057">FEDERAL RESERVE</text>
+  </g>
+  
+  <!-- Interest Rate and Stock Market Correlation -->
+  <g transform="translate(400, 400)">
+    <!-- Axes -->
+    <line x1="-200" y1="0" x2="200" y2="0" stroke="#adb5bd" stroke-width="2" />
+    <line x1="-200" y1="-100" x2="-200" y2="100" stroke="#adb5bd" stroke-width="2" />
+    
+    <!-- Axis labels -->
+    <text x="0" y="120" text-anchor="middle" font-family="Arial" font-size="14" fill="#495057">Time</text>
+    <text x="-230" y="0" text-anchor="middle" font-family="Arial" font-size="14" fill="#495057">Rate</text>
+    
+    <!-- Interest rate line -->
+    <path d="M-200,50 L-150,40 L-100,20 L-50,0 L0,-20 L50,-40 L100,-30 L150,-10 L200,10" fill="none" stroke="#fa5252" stroke-width="3" />
+    
+    <!-- Stock market line (inverse correlation) -->
+    <path d="M-200,-30 L-150,-20 L-100,0 L-50,20 L0,40 L50,60 L100,50 L150,30 L200,10" fill="none" stroke="#4dabf7" stroke-width="3" />
+    
+    <!-- Legend -->
+    <g transform="translate(120, -80)">
+      <rect width="160" height="60" fill="white" stroke="#dee2e6" rx="4" />
+      <line x1="10" y1="15" x2="40" y2="15" stroke="#fa5252" stroke-width="3" />
+      <text x="50" y="20" font-family="Arial" font-size="12" fill="#495057">Interest Rate</text>
+      <line x1="10" y1="40" x2="40" y2="40" stroke="#4dabf7" stroke-width="3" />
+      <text x="50" y="45" font-family="Arial" font-size="12" fill="#495057">Stock Market</text>
+    </g>
+  </g>
+  
+  <!-- Dollar symbols floating around -->
+  <g fill="#20c997" font-family="Arial" font-weight="bold">
+    <text x="100" y="150" font-size="24">$</text>
+    <text x="150" y="250" font-size="30">$</text>
+    <text x="650" y="150" font-size="24">$</text>
+    <text x="700" y="250" font-size="30">$</text>
+    <text x="200" y="350" font-size="20">$</text>
+    <text x="600" y="350" font-size="20">$</text>
+  </g>
+  
+  <!-- Policy arrows connecting Fed to market -->
+  <g stroke="#495057" stroke-width="2" stroke-dasharray="10,5">
+    <path d="M400,220 C400,280 300,320 250,350" fill="none" />
+    <path d="M400,220 C400,280 500,320 550,350" fill="none" />
+    
+    <!-- Arrow heads -->
+    <path d="M250,350 L260,335 L240,340 Z" fill="#495057" />
+    <path d="M550,350 L540,335 L560,340 Z" fill="#495057" />
+  </g>
+</svg>
