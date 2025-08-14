@@ -32,13 +32,11 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { name: "Home", href: "/", icon: <HomeIcon className="h-5 w-5" /> },
-    { name: "Dashboard", href: "/dashboard", icon: <BarChart2Icon className="h-5 w-5" /> },
+    { name: "About", href: "/about", icon: <BarChart2Icon className="h-5 w-5" /> },
     { name: "Research", href: "/research", icon: <Book className="h-5 w-5" /> },
     { name: "Market", href: "/market", icon: <CircleDollarSign className="market-section h-5 w-5" /> },
     { name: "Blog", href: "/blog", icon: <NewspaperIcon className="h-5 w-5" /> },
-    { name: "Learn", href: "/learn", icon: <BookOpenIcon className="h-5 w-5" /> },
     { name: "Saved", href: "/saved", icon: <SaveIcon className="h-5 w-5" /> },
-    { name: "Crypto", href: "/crypto", icon: <CoinsIcon className="crypto-section h-5 w-5" /> },
     { name: "Profile", href: "/profile", icon: <UserIcon className="h-5 w-5" /> },
   ]
 
