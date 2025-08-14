@@ -35,7 +35,7 @@ export const blogPosts: BlogPost[] = [
     date: "May 15, 2023",
     readTime: "5 min read",
     category: "Technology",
-    image: "/blog/ai-stocks.svg",
+    image: "/buildings.png",
     trend: "up",
     author: {
       name: "Alex Morgan",
@@ -199,7 +199,7 @@ export const blogPosts: BlogPost[] = [
     date: "July 10, 2023",
     readTime: "10 min read",
     category: "Technology",
-    image: "/algo.jpg",
+    image: "/stock.jpg",
     trend: "up",
     author: {
       name: "James Wilson",
@@ -232,7 +232,7 @@ export const blogPosts: BlogPost[] = [
     date: "December 15, 2024",
     readTime: "12 min read",
     category: "Market Analysis",
-    image: "/blog/tech-titans-2024.svg",
+    image: "/comp.jpg",
     trend: "up",
     author: {
       name: "David Chen",
@@ -262,7 +262,7 @@ export const featuredPost: BlogPost = {
   date: "July 10, 2023",
   readTime: "10 min read",
   category: "Technology",
-  image: "/blog/algo-trading.svg",
+  image: "/stock.jpg",
   trend: "up",
   author: {
     name: "James Wilson",

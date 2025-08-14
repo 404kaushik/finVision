@@ -298,10 +298,10 @@ export default function BlogPage() {
                 <div className="absolute inset-0" />
                 <div className="w-full h-full flex items-center justify-center">
                   <Image
-                    src="/public/algo.jpg"
+                    src={featuredPost.image}
                     alt={featuredPost.title}
                     fill
-                    className="object-cover"
+                    className="object-cover shadow-2xl"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
                   />
@@ -338,10 +338,12 @@ export default function BlogPage() {
                 </div>
                 <span className="text-sm font-medium">{featuredPost.author.name}</span>
               </div>
-              <Button className="group">
-                Read Full Article
-                <ArrowRightIcon className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <Link href="/blog/7">
+                <Button className="group">
+                  Read Full Article
+                  <ArrowRightIcon className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
         </div>
@@ -389,11 +391,14 @@ export default function BlogPage() {
                 <Card className="h-full overflow-hidden border-border hover:border-primary/20 transition-colors">
                   <div className="relative aspect-video overflow-hidden bg-muted">
                     <div className="absolute inset-0 flex items-center justify-center">
-                      {post.trend === "up" ? (
-                        <TrendingUpIcon className="h-12 w-12 text-primary/30" />
-                      ) : (
-                        <TrendingDownIcon className="h-12 w-12 text-destructive/30" />
-                      )}
+                      <Image
+                      src={post.image}     // ✅ Change from featuredPost.image to post.image
+                      alt={post.title}     // ✅ Change from featuredPost.title to post.title
+                      fill
+                      className="object-cover shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority
+                      />
                     </div>
                     <div className="absolute top-3 right-3 z-10">
                       <Badge variant={post.trend === "up" ? "default" : "destructive"}>

@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeftIcon, CalendarIcon, ClockIcon, ShareIcon, BookmarkIcon, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import Link from "next/link"
 import { blogPosts, getBlogPostById, getRelatedPosts, type BlogPost } from "@/data/blog-posts"
+import Image from "next/image"
 
 interface BlogInteractions {
   isBookmarked: boolean;
@@ -36,7 +37,7 @@ const MOCK_BLOG_POSTS_FOR_COMPATIBILITY = [
     date: "May 15, 2023",
     readTime: "5 min read",
     category: "Technology",
-    image: "/public/blog/ai-stocks.svg",
+    image: "/algo.jpg",
     trend: "up",
     author: {
       name: "Alex Morgan",
@@ -348,19 +349,21 @@ export default function BlogPost() {
                 </div>
               </div>
             </div>
-            
-            <div className="relative aspect-[2/1] rounded-xl overflow-hidden mb-10 border border-border">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/5 mix-blend-overlay z-10" />
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <div className="w-full h-full flex items-center justify-center">
-                  {post.trend === "up" ? (
-                    <TrendingUpIcon className="h-20 w-20 text-primary/40" />
-                  ) : (
-                    <TrendingDownIcon className="h-20 w-20 text-destructive/40" />
-                  )}
+                      
+                <div key={post.id} className="relative aspect-[2/1] rounded-xl overflow-hidden mb-10 border border-border">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/5 mix-blend-overlay z-10" />
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Image
+                      src={post.image}     // ✅ Change from featuredPost.image to post.image
+                      alt={post.title}     // ✅ Change from featuredPost.title to post.title
+                      fill
+                      className="object-cover shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority
+                      />
+                  </div>
                 </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </section>
@@ -499,11 +502,14 @@ export default function BlogPost() {
                   <Card className="h-full overflow-hidden border-border hover:border-primary/20 transition-colors">
                     <div className="relative aspect-video overflow-hidden bg-muted">
                       <div className="absolute inset-0 flex items-center justify-center">
-                        {post.trend === "up" ? (
-                          <TrendingUpIcon className="h-12 w-12 text-primary/30" />
-                        ) : (
-                          <TrendingDownIcon className="h-12 w-12 text-destructive/30" />
-                        )}
+                        <Image
+                      src={post.image}     // ✅ Change from featuredPost.image to post.image
+                      alt={post.title}     // ✅ Change from featuredPost.title to post.title
+                      fill
+                      className="object-cover shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority
+                      />
                       </div>
                       <div className="absolute top-3 right-3 z-10">
                         <Badge variant={post.trend === "up" ? "default" : "destructive"}>
