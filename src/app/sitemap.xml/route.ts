@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const baseUrl = 'https://finvision.app' // Replace with your actual domain
+  const baseUrl = 'https://finvision.my' // Replace with your actual domain
   const currentDate = new Date().toISOString()
 
   const staticPages = [
