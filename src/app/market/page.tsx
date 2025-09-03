@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useInView } from "react-intersection-observer"
-import Layout from "@/components/Layout"
 import { StockCarousel } from "@/components/StockCarousel"
 import CompanyChart from "@/components/CompanyChart"
+import Layout from "@/components/Layout"
 import {
   CoinsIcon,
   TrendingUpIcon,
